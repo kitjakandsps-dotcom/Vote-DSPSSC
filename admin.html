@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ผู้ดูแลระบบ · เลือกตั้งบนเครื่อง</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d3b23'/%3E%3Cpath d='M9 17l5 5 9-11' stroke='%23f2b705' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!--
+  ระบบเลือกตั้งบนเครื่อง (ประธานนักเรียน + ประธานคณะสี) · โรงเรียนเทพศิรินทร์พุแค สระบุรี
+  ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ
+  ส่วนที่ 2 : หน้าผู้ดูแลระบบ (admin.html)
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f3ee; --surface:#fff; --ink:#14201a; --muted:#5f6b64; --line:#e3e5de; --soft:#eef0ea;
+    --g:#17603a; --g9:#0d3b23; --g1:#e7f0ea; --gold:#f2b705; --gold1:#fff5d2; --gold9:#6b5000;
+    --red:#c0352b; --red1:#fdecea;
+    --r:18px; --sh:0 1px 2px rgba(20,32,26,.05),0 6px 18px rgba(20,32,26,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Anuphan",system-ui,sans-serif;font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .hide{display:none!important}
+  button,input,select,textarea{font-family:inherit;font-size:15.5px;color:inherit}
+  button{cursor:pointer}
+  a{color:var(--g)}
+  svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+  /* ---------- ปุ่มและฟอร์ม ---------- */
+  .btn{height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .12s,transform .06s;text-decoration:none;color:var(--ink)}
+  .btn:hover{background:var(--soft)}
+  .btn:active{transform:translateY(1px)}
+  .btn.pri{background:var(--g);border-color:var(--g);color:#fff}.btn.pri:hover{background:var(--g9)}
+  .btn.yel{background:var(--gold);border-color:var(--gold);color:var(--g9)}
+  .btn.red{background:var(--red);border-color:var(--red);color:#fff}
+  .btn.ghost{background:var(--surface)}
+  .btn.sm{height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+  label.f{display:block;margin-bottom:14px}
+  label.f span,.flab{display:block;font-size:13.5px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  input[type=text],input[type=password],input[type=number],textarea{width:100%;height:46px;border:1px solid var(--line);background:#fcfcfa;border-radius:12px;padding:0 14px;transition:border-color .12s,box-shadow .12s}
+  textarea{height:96px;padding:10px 14px;resize:vertical}
+  input:focus,textarea:focus{outline:0;border-color:var(--g);box-shadow:0 0 0 4px rgba(23,96,58,.12);background:#fff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  .pill,.stat{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;background:var(--soft);color:var(--muted)}
+    .stat.CLOSED{background:var(--g1);color:var(--g)}
+  .stat.PAUSED{background:var(--red1);color:var(--red)}
+
+  /* ---------- เข้าสู่ระบบ ---------- */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--g9);padding:20px;position:relative;overflow:hidden}
+  #login::before{content:"";position:absolute;width:440px;height:440px;border-radius:50%;border:64px solid rgba(242,183,5,.09);left:-180px;bottom:-200px}
+  .lwrap{width:100%;max-width:380px;position:relative}
+  .lbox{background:var(--surface);border-radius:26px;padding:28px 24px 22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .seal{width:50px;height:50px;border-radius:14px;background:var(--gold);color:var(--g9);display:grid;place-items:center;margin-bottom:16px}
+  .seal svg{width:26px;height:26px}
+  .lbox h1{margin:0;font-size:24px;font-weight:700}
+  .lbox p{margin:2px 0 20px;color:var(--muted);font-size:14px}
+  .err{color:var(--red);font-size:14px;min-height:20px;margin-top:8px}
+  .lfoot{text-align:center;color:#8fa898;font-size:12px;margin-top:16px}
+
+  /* ---------- โครงหน้า ---------- */
+  .layout{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+  nav.side{background:var(--g9);color:#dfe9e2;padding:22px 14px;display:flex;flex-direction:column;gap:3px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;gap:11px;align-items:center;padding:0 8px 22px}
+  .brand .seal{width:40px;height:40px;border-radius:12px;margin:0}
+  .brand .seal svg{width:22px;height:22px}
+  .brand b{font-size:15px;line-height:1.2;display:block}
+  .brand small{display:block;font-size:11.5px;color:#9fb3a7;font-weight:500;line-height:1.3;margin-top:2px}
+  nav.side button[data-p]{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:none;border:0;padding:11px 12px;border-radius:12px;font-size:14.5px;color:#cfe0d5;transition:background .12s}
+  nav.side button[data-p]:hover{background:rgba(255,255,255,.06)}
+  nav.side button[data-p].on{background:rgba(255,255,255,.12);color:#fff;font-weight:600}
+  nav.side button[data-p].on svg{color:var(--gold)}
+  nav.side .credit{margin-top:auto;font-size:11.5px;color:#7f9688;padding:0 10px;line-height:1.5}
+  .main{padding:20px 28px 40px;min-width:0;max-width:1240px;width:100%}
+  .topbar{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .topbar .ttl{flex:1;min-width:0;font-size:13.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ibtn{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex-shrink:0}
+  .ibtn:hover{background:var(--soft)}
+  h2{font-size:27px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .lead{color:var(--muted);margin:2px 0 18px;font-size:14px}
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;margin-bottom:14px;min-width:0}
+  .box h3{margin:0 0 12px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .box h3 svg{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+  /* ---------- ควบคุมการนับ (Bento) ---------- */
+  .bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+  .bento > *{margin:0}
+  .c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px}
+  .kpi > span{display:block;font-size:13px;color:var(--muted);font-weight:600}
+  .kpi b{display:block;font-size:34px;line-height:1.15;margin-top:4px;font-weight:700}
+  .kpi small{display:block;color:var(--muted);font-size:13px}
+  .kpi.hero{background:var(--g);border-color:var(--g);color:#fff}
+  .kpi.hero > span,.kpi.hero small{color:#cfe0d5}
+  .kpi.hero .mt{height:6px;border-radius:999px;background:rgba(255,255,255,.2);margin-top:10px;overflow:hidden}
+  .kpi.hero .mt i{display:block;height:100%;width:0;background:var(--gold);border-radius:999px;transition:width .4s}
+  .recon{padding:11px 14px;margin-top:12px;font-weight:600;border-radius:12px;font-size:14px}
+  .recon:empty{display:none}
+  .ctr{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13.5px;color:var(--muted)}
+  .ctr:empty{display:none}
+  .ctr i{width:9px;height:9px;border-radius:50%;background:#9aa39d;flex-shrink:0}
+  .ctr.on i{background:#2fa463}.ctr.wait i{background:var(--gold)}.ctr.off i{background:var(--red)}
+  .ctr.wait b{color:var(--gold9)}.ctr.off b{color:var(--red)}
+  .recon.ok{background:var(--g1);color:var(--g)}
+  .recon.short{background:var(--gold1);color:var(--gold9)}
+  .recon.over{background:var(--red1);color:var(--red)}
+  .seg{display:flex;background:var(--soft);border-radius:13px;padding:4px;gap:4px}
+  .seg button{flex:1;height:40px;padding:0 12px;border:0;border-radius:10px;background:transparent;font-weight:600;color:var(--muted);white-space:nowrap}
+  .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--sh)}
+  .res{background:var(--gold1);border-color:#f3e2a6}
+  .res #resultLine{margin:0;background:transparent;padding:0;font-size:17px;line-height:1.45;color:var(--ink)}
+  .res #resultLine.ok{color:var(--g)}.res #resultLine.over{color:var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:12.5px;color:var(--muted);font-weight:600}
+  td.r,th.r{text-align:right}
+  .bar{height:7px;background:var(--soft);min-width:60px;border-radius:999px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:999px}
+  .tbl{overflow-x:auto}
+  tr.undone td{color:#9aa39d;text-decoration:line-through}
+  .links{display:grid;gap:8px}
+  .link{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 14px;background:#fcfcfa}
+  .link b{min-width:130px;font-size:14.5px}
+  .link code{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+
+  /* ---------- พรรค ---------- */
+  .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .pitem{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:12px;position:relative}
+  .pitem .no{position:absolute;left:8px;top:8px;min-width:28px;height:28px;padding:0 6px;border-radius:9px;background:var(--c);color:#fff;font-size:15px;font-weight:700;display:grid;place-items:center;z-index:1;box-shadow:0 0 0 2px #fff}
+  .pitem .thumb{width:64px;height:64px;border-radius:14px;background:var(--c);object-fit:cover;display:block}
+  .pitem .nm{font-weight:700;font-size:16px}
+  .pitem .ps{color:var(--muted);font-size:13.5px}
+  .pitem .acts{display:flex;gap:6px}
+  .swatches{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .swatches button{width:32px;height:32px;border-radius:10px;border:0;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+  .swatches button.on{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
+  .swatches input[type=color]{width:44px;height:32px;border:1px solid var(--line);border-radius:10px;padding:2px;background:#fff}
+  .imgs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+  .imgbox{border:1.5px dashed #c9cfc6;border-radius:16px;padding:12px;text-align:center;background:#fcfcfa}
+  .imgbox img{display:block;width:100%;height:160px;object-fit:contain;background:#fff;margin-bottom:10px;border-radius:12px}
+  .imgbox .empty{height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--soft);border-radius:12px;margin-bottom:10px;font-size:14px}
+  .note{background:var(--gold1);color:var(--gold9);border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:12px}
+
+  /* ---------- Dialog / Toast ---------- */
+  .veil{position:fixed;inset:0;background:rgba(13,30,20,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+  .dlg{width:100%;max-width:440px;background:var(--surface);border-radius:24px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);border-top:6px solid var(--gold)}
+  .dlg.danger{border-top-color:var(--red)}
+  .dlg h3{margin:0 0 6px;font-size:20px;font-weight:700}
+  .dlg p{margin:0 0 12px;color:var(--muted)}
+  .dlg .row{justify-content:flex-end;margin-top:14px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:999px;z-index:60;max-width:92%;font-size:14.5px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  .toast.bad{background:var(--red)}
+  .busy{position:fixed;top:0;left:0;right:0;height:3px;background:var(--gold);z-index:70;animation:busy 1s linear infinite;transform-origin:left}
+  @keyframes busy{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+  .mainfoot{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 0}
+
+  /* ---------- รายงาน (A4, ฟอนต์ Sarabun แบบหนังสือราชการ) ---------- */
+  .rep-wrap{overflow-x:auto;background:#dfe2db;padding:18px;border-radius:var(--r)}
+  #report{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#000;padding:14mm 18mm 10mm;font-family:"Sarabun",sans-serif;font-size:14.5px;line-height:1.5;position:relative;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+  #report h1{font-family:"Sarabun";font-size:21px;text-align:center;margin:0}
+  #report .sub{text-align:center;margin:0 0 4px}
+  #report .meta{text-align:center;font-size:13px;margin-bottom:8px}
+  #report h4{font-size:15.5px;margin:12px 0 4px}
+  #report table{font-size:14px;border:1px solid #000}
+  #report th,#report td{border:1px solid #000;padding:3px 8px;color:#000;font-size:14px}
+  #report th{background:#eee;font-weight:700}
+  #report .tot td{font-weight:700;background:#f5f5f5}
+  #report .verdict{border:2px solid #000;padding:10px 14px;margin-top:6px}
+  #report .draft{position:absolute;top:110mm;left:0;right:0;text-align:center;font-size:90px;font-weight:700;color:rgba(179,38,30,.13);transform:rotate(-22deg);pointer-events:none}
+  #report .signs{display:grid;grid-template-columns:1fr 1fr;gap:10px 30px;margin-top:8px;break-inside:avoid}
+  #report .sign{text-align:center;font-size:14px}
+  #report .sign .ln{margin-top:20px}
+  #report .foot{margin-top:18px;font-size:11px;color:#555;display:flex;justify-content:space-between;gap:10px;border-top:1px solid #bbb;padding-top:4px}
+  /* พิมพ์: ซ่อนทุกอย่างยกเว้นรายงาน และให้ขึ้นหน้าใหม่ได้เมื่อพรรคเยอะ */
+  @media print{
+    @page{size:A4;margin:12mm 0}
+    html,body{background:#fff}
+    #login,nav.side,.topbar,.pane:not(#p-rep),#p-rep > :not(.rep-wrap),.mainfoot,.toast,.busy,.veil,.rs{display:none!important}
+    .layout,.main{display:block;padding:0;margin:0;max-width:none}
+    .rep-wrap{padding:0;background:none;border-radius:0;overflow:visible}
+    #report{width:auto;min-height:0;margin:0;padding:0 18mm;box-shadow:none}
+    #report tr,#report .verdict,#report .signs{break-inside:avoid}
+    #report .rpage + .rpage{margin-top:0;padding-top:0;border-top:0}
+  }
+
+  /* ---------- มือถือ / แท็บเล็ต ---------- */
+  @media (max-width:1100px){ .c3{grid-column:span 6}.c5,.c7,.c4,.c8{grid-column:span 12} }
+  @media (max-width:860px){
+    .layout{grid-template-columns:minmax(0,1fr)}
+    nav.side{position:sticky;top:0;height:auto;z-index:9;flex-direction:row;overflow-x:auto;padding:10px 10px;gap:4px;align-items:center;scrollbar-width:none}
+    nav.side::-webkit-scrollbar{display:none}
+    .brand{padding:0 8px 0 2px;flex-shrink:0}
+    .brand b,.brand small{display:none}
+    nav.side button[data-p]{flex-shrink:0;width:auto;padding:9px 13px;white-space:nowrap;font-size:14px}
+    nav.side button[data-p] svg{display:none}
+    nav.side .credit{display:none}
+    .main{padding:14px 14px 30px}
+    h2{font-size:23px}
+    .grid2,.imgs{grid-template-columns:1fr}
+    .kpi b{font-size:28px}
+    .seg button{padding:0 6px;font-size:14px}
+    .link b{min-width:0;flex:1}
+    .link code{display:none}
+    .plist{grid-template-columns:1fr}
+    .grow{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+    .grow .gp{grid-column:1/-1}
+    .grow .ga{grid-column:1/-1;justify-content:flex-start;min-width:0}
+    .gedit{grid-template-columns:44px minmax(0,1fr) auto}
+    .gedit .num2{grid-column:span 1}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  /* ---------- เฉพาะระบบเลือกตั้งบนเครื่อง ---------- */
+  .stat.OPEN{background:var(--gold);color:var(--g9)}
+  .stat.CLOSED{background:var(--g1);color:var(--g)}
+  .stat.PAUSED{background:var(--red1);color:var(--red)}
+  .stat.SEALED{background:#3b2a05;color:#ffd75e}
+  input[type=date],select.f2{width:100%;height:46px;border:1px solid var(--line);background:#fcfcfa;border-radius:12px;padding:0 12px;font:inherit;color:var(--ink)}
+  input[type=date]:disabled,select.f2:disabled{opacity:.55}
+  .sched{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .sched div{border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:#fcfcfa;line-height:1.3}
+  .sched small{display:block;font-size:12.5px;color:var(--muted);font-weight:600}
+  .sched b{font-size:15.5px}
+  .sched .now{border-color:var(--gold);background:var(--gold1)}
+  .sched .now small{color:var(--gold9)}
+  .sched .done{opacity:.6}
+  .sealbox{margin-top:12px;border:1.5px dashed #c99a12;border-radius:14px;padding:12px 14px;background:#fffbea}
+  .sealbox small{display:block;color:var(--gold9);font-weight:700;font-size:12.5px}
+  .sealbox b{display:block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:24px;letter-spacing:.06em;color:#4a3606;margin:2px 0}
+  .sealbox span{font-size:13.5px;color:var(--muted)}
+  .sealbox.bad{border-color:var(--red);background:var(--red1)}.sealbox.bad b{color:var(--red)}
+  .rseal{border:2px solid #222;border-radius:4mm;padding:4mm 6mm;margin:4mm 0;text-align:center}
+  .rseal small{display:block;font-size:12px}
+  .rseal b{display:block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:26pt;letter-spacing:.08em;margin:1mm 0}
+  .ready{display:grid;gap:6px;margin-top:12px}
+  .ready div{display:flex;gap:9px;align-items:flex-start;font-size:14px}
+  .ready i{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;margin-top:1px}
+  .ready .y i{background:var(--g1);color:var(--g)}
+  .ready .n i{background:var(--red1);color:var(--red)}
+  .ready .n{color:var(--ink)}
+  .ready .y{color:var(--muted)}
+  .stn{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid var(--line)}
+  .stn:first-of-type{border-top:0;padding-top:4px}
+  .stn h4{margin:0;font-size:16px}
+  .stn small{display:block;color:var(--muted);font-size:13px}
+  .stn .tb{height:8px;border-radius:999px;background:var(--soft);margin-top:8px;overflow:hidden}
+  .stn .tb i{display:block;height:100%;background:var(--g);border-radius:999px;transition:width .4s}
+  .stn .tn{font-size:13px;color:var(--muted);margin-top:4px}
+  .stn .tn b{color:var(--ink);font-size:15px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+  .tile{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fcfcfa;position:relative;min-height:66px}
+  .tile b{display:block;font-size:14.5px}
+  .tile span{display:block;font-size:12.5px;font-weight:600;margin-top:2px}
+  .tile::before{content:"";position:absolute;right:10px;top:12px;width:9px;height:9px;border-radius:50%;background:#b6bdb6}
+  .tile.b-free::before{background:#2fa463}.tile.b-free span{color:var(--g)}
+  .tile.b-busy{background:var(--gold1);border-color:#f0dc9a}.tile.b-busy::before{background:var(--gold)}.tile.b-busy span{color:var(--gold9)}
+  .tile.b-off{background:var(--red1);border-color:#f3c8c3}.tile.b-off::before{background:var(--red)}.tile.b-off span{color:var(--red)}
+  .tile.b-np span{color:var(--muted)}
+  .hbar{display:grid;grid-template-columns:minmax(64px,auto) minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;font-size:14px}
+  .hbar .bar{height:10px}
+  .hbar .v{font-size:13px;color:var(--muted);white-space:nowrap}
+  .hbar .v b{color:var(--ink)}
+  .hbar .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:0}
+  .rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+  .rblk{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fcfcfa}
+  .rblk header{padding:10px 14px;background:var(--c,var(--g));color:var(--on,#fff);font-weight:700;display:flex;justify-content:space-between;gap:8px}
+  .rblk header small{font-weight:600;opacity:.85}
+  .rblk .in{padding:6px 14px 12px}
+  .rblk .rl{margin-top:8px;padding:9px 12px;border-radius:10px;font-weight:600;font-size:14px;background:var(--soft)}
+  .rblk .rl.ok{background:var(--g1);color:var(--g)}.rblk .rl.bad{background:var(--red1);color:var(--red)}
+  .rblk .tie{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+  .rblk .tie label{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin:0 6px 6px 0;background:#fff;font-size:14px;cursor:pointer}
+  .lock{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:14px;padding:14px 16px;color:var(--muted);font-size:14.5px}
+  .lock svg{width:26px;height:26px;color:var(--g)}
+  .tbox .thead{display:flex;align-items:center;gap:10px;margin-bottom:8px}.tbox .thead h3{margin:0}
+  .tcount{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--muted)}
+  .tcount.on{background:var(--g1);color:var(--g)}
+  .tpaste{height:130px}
+  .tres{margin-top:12px;font-size:14px}.tres li{margin:3px 0}
+  .tst{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:4px 14px;align-items:end;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  .tst .lead{margin:0 0 9px}
+  @media (max-width:640px){.tst{grid-template-columns:minmax(0,1fr)}}
+  .hbar.tch{border-top:1px dashed var(--line);margin-top:4px;padding-top:10px}
+  .rrow.tch{border-top:1.5px dashed var(--line);background:var(--soft);border-radius:10px;margin-top:6px}
+  .rrow.tch .rk{font-size:12px}
+  .paste{height:200px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;white-space:pre}
+  .cols{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+  .cols span{background:var(--g1);color:var(--g);border-radius:8px;padding:3px 10px;font-size:13px;font-weight:600}
+  .pv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+  .pv div{background:var(--soft);border-radius:12px;padding:10px 12px}
+  .pv b{display:block;font-size:22px}
+  .pv small{color:var(--muted);font-size:12.5px}
+  .pv .bad{background:var(--red1)}.pv .bad b{color:var(--red)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chips span{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:#fff}
+  .chips i{width:9px;height:9px;border-radius:3px;background:var(--c)}
+  .st-ISSUED{color:var(--gold9);font-weight:600}.st-VOTED{color:var(--g);font-weight:600}.st-PAPER{color:#6a3d9a;font-weight:600}
+  .sedit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) auto;gap:10px;align-items:end;padding:10px 0;border-bottom:1px solid var(--line)}
+  .sedit label.f{margin:0}
+  .sedit .btn{height:46px}
+  .bcard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fcfcfa}
+  .bcard b{font-size:15px}
+  .bcard .code{grid-column:1/-1;font-size:28px;font-weight:700;letter-spacing:.18em;color:var(--g9);background:var(--gold1);border-radius:10px;text-align:center;padding:4px 0}
+  .bcard .acts{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+  .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .tabs button{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:11px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:14px;color:var(--ink)}
+  .tabs button i{width:11px;height:11px;border-radius:4px;background:var(--c)}
+  .tabs button.on{background:var(--c);border-color:var(--c);color:var(--on,#fff)}
+  .tabs button.on i{background:var(--on,#fff)}
+  .tabs button small{font-weight:600;opacity:.75}
+  .hedit{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .hedit input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-radius:12px;padding:3px;background:#fff}
+  .hedit small{color:var(--muted);font-size:13px;white-space:nowrap}
+  #report .rpage{position:relative}
+  #report .rpage + .rpage{break-before:page;margin-top:18mm;padding-top:10mm;border-top:2px dashed #bbb}
+  #report .gtag{display:inline-block;padding:1px 12px;border:1.5px solid #000;border-radius:999px;font-weight:700}
+  #report .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  #report .two th,#report .two td{font-size:13px;padding:2px 6px}
+  #report h4{margin:9px 0 3px}
+  #report .sign .ln{margin-top:14px}
+  #report .signs{gap:6px 30px}
+  #report .foot{margin-top:10px}
+  /* ---------- เก็บถาวรและปีใหม่ ---------- */
+  .aflow{list-style:none;margin:0 0 14px;padding:0;position:relative;max-width:900px}
+  .astep{display:grid;grid-template-columns:44px minmax(0,1fr);gap:16px;position:relative;padding-bottom:14px}
+  .astep:first-child::after{content:"";position:absolute;left:21px;top:48px;bottom:0;width:2px;background:var(--line)}
+  .anum{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:19px;background:var(--g9);color:var(--gold)}
+  .astep.red .anum{background:#fff;color:var(--red);border:2px solid var(--red)}
+  .astep.off .anum{background:#e9ebe6;color:#8a938c;border-color:#e9ebe6}
+  .abody{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px 20px;min-width:0}
+  .astep.red .abody{border-color:#f1c9c5;background:#fffafa}
+  .abody h3{margin:0 0 10px;font-size:17px}
+  .astep.red h3{color:var(--red)}
+  .astate{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 13px;font-size:14px;margin-bottom:12px;background:#f2f4f0;color:var(--ink)}
+  .astate svg{flex-shrink:0;width:20px;height:20px;margin-top:1px}
+  .astate.ok{background:#e7f2ea;color:#15502f}.astate.warn{background:var(--gold1);color:#5c4700}.astate.bad{background:#fdeceb;color:#8c1d16}
+  .astate b{font-weight:700}.astate a{color:inherit;font-weight:600}
+  .alist{margin:0 0 14px;padding-left:20px;font-size:14px;color:var(--muted)}
+  .alist li{margin:3px 0}.alist b{color:var(--ink);font-weight:600}
+  .acols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+  .acols>div{border:1px dashed #e6bcb7;border-radius:12px;padding:10px 12px;background:#fff}
+  .acols h5{margin:0 0 4px;font-size:13px;color:var(--red);letter-spacing:.02em}
+  .acols>div:last-child{border-color:#bcd8c5}.acols>div:last-child h5{color:var(--g)}
+  .acols p{margin:0;font-size:13.5px;line-height:1.55;color:var(--muted)}.acols p b{color:var(--ink)}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .arow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+  .arow:first-child{border-top:0;padding-top:2px}
+  .arow .ay{font-size:22px;font-weight:700;color:var(--g9);line-height:1.1}.arow .ay small{display:block;font-size:11.5px;font-weight:600;color:var(--muted)}
+  .arow .an{font-weight:600;font-size:15px}.arow .at{font-size:13px;color:var(--muted)}
+  .arow .al{display:flex;gap:6px;flex-wrap:wrap}
+  @media (max-width:760px){
+    .acols{grid-template-columns:minmax(0,1fr)}
+    .astep{grid-template-columns:34px minmax(0,1fr);gap:10px}.anum{width:34px;height:34px;font-size:16px}
+    .astep:first-child::after{left:16px;top:38px}
+    .abody{padding:14px}
+    .arow{grid-template-columns:72px minmax(0,1fr)}.arow .al{grid-column:1/-1}
+  }
+  /* ---------- นับคะแนนสด ---------- */
+  .lvctl{background:var(--g9);border-color:var(--g9);color:#e6efe9}
+  .lvctl h3{color:#fff}.lvctl h3 svg{color:var(--gold)}
+  .lvctl .lead{color:#a9c1b2}
+  .lvctl label.f span{color:#b9cfc1}
+  .lvctl select.f2{background:#123f28;border-color:#2c5c41;color:#fff}
+  .lvctl .btn.ghost{background:transparent;color:#fff;border-color:#3d6b51}.lvctl .btn.ghost:hover{background:rgba(255,255,255,.07)}
+  .lvst{display:flex;align-items:center;gap:9px;font-size:14px;flex-wrap:wrap}
+  .lvst b{font-size:15px;color:#fff}
+  .lvst .nx{margin-left:auto;font-size:13px;color:#b9cfc1}
+  .lvst .nx b{color:var(--gold);font-size:15px}
+  .lvdot{width:10px;height:10px;border-radius:50%;background:#7d8f84;flex-shrink:0}
+  .lvdot.RUN{background:#4fd18b;box-shadow:0 0 0 0 rgba(79,209,139,.6);animation:lvp 1.6s infinite}
+  .lvdot.PAUSE{background:var(--gold)}.lvdot.DONE{background:#fff}
+  @keyframes lvp{70%{box-shadow:0 0 0 9px rgba(79,209,139,0)}100%{box-shadow:0 0 0 0 rgba(79,209,139,0)}}
+  .lvbig{display:flex;align-items:baseline;gap:12px;margin:14px 0 8px;flex-wrap:wrap}
+  .lvbig b{font-size:54px;line-height:1;font-weight:700;color:#fff}
+  .lvbig small{font-size:14px;color:#b9cfc1}
+  .lvmeter{height:12px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;display:flex}
+  .lvmeter i{display:block;height:100%;transition:width .6s}
+  .lvmeter i + i{box-shadow:inset 2px 0 0 var(--g9)}
+  .lvkey{display:flex;gap:4px 12px;flex-wrap:wrap;font-size:12.5px;color:#b9cfc1;margin:7px 0 4px}
+  .lvkey span{display:inline-flex;align-items:center;gap:5px}.lvkey i{width:9px;height:9px;border-radius:3px;background:var(--c)}
+  .lvset{margin-top:14px}
+  .lvctl .row{margin-top:2px}
+  .lvctl .row.sub{margin-top:10px;padding-top:10px;border-top:1px solid #24563b}
+  .lvside .lvfeed{margin-top:4px;max-height:230px}
+  .lvctl .recon{margin:12px 0 0}
+  .lvctl .recon .btn{margin-left:8px;height:30px;font-size:13px}
+  /* ---------- หน้าแนะนำผู้สมัคร ---------- */
+  .pub{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:16px;align-items:center;max-width:760px;margin-bottom:16px}
+  .pub h3{margin-bottom:4px}
+  .pub .qr{width:128px;border:1px solid var(--line);border-radius:14px;padding:6px;background:#fff}
+  .pub .qr svg{display:block;width:100%;height:auto}
+  .pubst{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;border-radius:999px;padding:3px 11px;background:var(--soft);color:var(--muted)}
+  .pubst i{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .pubst.ON{background:var(--g1);color:var(--g)}.pubst.QUIET{background:var(--gold1);color:var(--gold9)}
+  .pitem .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+  .pitem .tags span{font-size:11.5px;font-weight:600;border-radius:6px;padding:0 6px;background:var(--soft);color:var(--muted)}
+  .pitem .tags span.ok{background:var(--g1);color:var(--g)}
+  .info{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
+  .info h4{margin:0 0 2px;font-size:15px}
+  .info textarea{height:auto;min-height:118px;padding:10px 14px;line-height:1.55;resize:vertical}
+  .info .cnt{font-size:12.5px;color:var(--muted);margin-top:3px;text-align:right}
+  .info .cnt.bad{color:var(--red);font-weight:700}
+  /* ---------- สถิติ ---------- */
+  .skpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+  .skpi div{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+  .skpi small{display:block;font-size:12.5px;color:var(--muted);font-weight:600}
+  .skpi b{font-size:26px;line-height:1.2}
+  .skpi span{font-size:13px;color:var(--muted)}
+  .skpi .pk{background:var(--g9);border-color:var(--g9);color:#fff}.skpi .pk small,.skpi .pk span{color:#b9cfc1}.skpi .pk b{color:var(--gold)}
+  .hchart{display:flex;align-items:flex-end;gap:6px;height:190px;padding:22px 2px 0;border-bottom:1px solid var(--line)}
+  .hchart .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+  .hchart .c i{display:block;width:100%;max-width:46px;background:var(--g);border-radius:7px 7px 2px 2px;min-height:2px;transition:height .5s}
+  .hchart .c.pk i{background:var(--gold)}
+  .hchart .c b{font-size:12.5px;margin-bottom:3px}
+  .hlab{display:flex;gap:6px;padding:5px 2px 0}
+  .hlab span{flex:1;text-align:center;font-size:12px;color:var(--muted);min-width:0}
+  .dayh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;margin-bottom:2px}
+  .dayh b{font-size:16px}.dayh small{color:var(--muted);font-size:13px}
+  .rfil{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .rfil button{height:32px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:13px}
+  .rfil button.on{background:var(--g9);border-color:var(--g9);color:#fff}
+  .rrow{display:grid;grid-template-columns:34px 84px minmax(0,1fr) 92px 62px;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+  .rrow:first-child{border-top:0}
+  .rrow .rk{font-weight:700;color:var(--muted);text-align:right}
+  .rrow .rn{font-weight:600}
+  .rrow .bar{height:10px}
+  .rrow .bar i{background:var(--g)}
+  .rrow.full .bar i{background:var(--gold)}
+  .rrow .v{text-align:right;color:var(--muted);font-size:13px}
+  .rrow .p{text-align:right;font-weight:700}
+  .rrow.full .p{color:var(--g)}
+  .rrow.full .rn::after{content:"ครบ";margin-left:6px;font-size:11px;font-weight:700;background:var(--g1);color:var(--g);border-radius:5px;padding:0 5px}
+  @media (max-width:860px){
+    .skpi{grid-template-columns:1fr 1fr}
+    .rrow{grid-template-columns:28px 64px minmax(0,1fr) 54px;gap:8px}
+    .rrow .v{display:none}
+    .pub{grid-template-columns:1fr}
+    .pub .qr{display:none}
+  }
+  .chk{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px;cursor:pointer;line-height:1.4}
+  .chk input{width:18px;height:18px;margin-top:1px;accent-color:var(--g);flex-shrink:0}
+  .lvctl .chk{margin:4px 0 12px;color:#dfe9e2}.lvctl .chk input{accent-color:var(--gold)}
+  .lvboxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .lvbox{border:1px solid var(--line);border-radius:14px;padding:10px 12px 11px;background:#fcfcfa;position:relative;overflow:hidden}
+  .lvbox::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c,#cfd5cf)}
+  .lvbox b{display:block;font-size:14.5px}
+  .lvbox small{display:block;font-size:12.5px;color:var(--muted)}
+  .lvbox .ld{font-size:12.5px;font-weight:600;margin-top:5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lvbox .bar{margin-top:7px;height:6px}
+  .lvraces{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .lvrace{border:1px solid var(--line);border-radius:16px;padding:12px 14px;background:#fcfcfa}
+  .lvrace.pres{grid-column:1/-1}
+  .lvrace header{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .lvrace header b{font-size:15.5px}
+  .lvrace header .sw{width:11px;height:11px;border-radius:4px;background:var(--c);display:inline-block}
+  .lvrace header small{margin-left:auto;font-size:12.5px;color:var(--muted)}
+  .lvp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding:6px 0;border-top:1px dashed var(--line)}
+  .lvp:first-of-type{border-top:0}
+  .lvp .nm{font-size:14px;line-height:1.7;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lvp .nm em{font-style:normal;color:var(--muted);font-weight:500;margin-right:4px}
+  .lvp .v{font-size:13px;color:var(--muted);text-align:right;white-space:nowrap}.lvp .v b{color:var(--ink);font-size:15px}
+  .lvp .bar{grid-column:1/-1;height:9px}
+  .lvp.out{opacity:.45}
+  .lvtag{display:inline-block;font-size:11.5px;line-height:1.5;font-weight:700;border-radius:6px;padding:0 7px;margin-left:6px;vertical-align:1px}
+  .lvtag.lead{background:var(--gold1);color:var(--gold9)}
+  .lvtag.win{background:var(--g);color:#fff}
+  .lvtag.fail{background:var(--red1);color:var(--red)}
+  .lvrace .ex{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .lvfeed{list-style:none;margin:0;padding:0;display:grid;gap:0;max-height:300px;overflow:auto}
+  .lvfeed li{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+  .lvfeed li:first-child{border-top:0}
+  .lvfeed li span{font-size:12px;color:var(--muted);font-weight:600;padding-top:2px}
+  .lvfeed li:first-child b{color:var(--g)}
+  .lvfeed li b{font-weight:600}
+  @media (max-width:560px){
+    .seg button{height:auto;min-height:40px;padding:6px 6px;font-size:13.5px;line-height:1.25}
+  }
+  @media (max-width:860px){
+    .lvraces{grid-template-columns:1fr}
+    .lvbig b{font-size:44px}
+    .stn{grid-template-columns:1fr}
+    .sedit{grid-template-columns:minmax(0,1fr) auto}
+    .sedit label.f:nth-child(2){grid-column:1/-1;grid-row:2}
+    .rgrid{grid-template-columns:1fr}
+  }
+</style>
+<script src="app.js"></script>
+</head>
+<body>
+
+<!-- ===== เข้าสู่ระบบ ===== -->
+<section id="login">
+  <div class="lwrap">
+    <form class="lbox" id="loginForm">
+      <div class="seal" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div>
+      <h1>ผู้ดูแลระบบ</h1>
+      <p>ระบบเลือกตั้งบนเครื่อง · ประธานนักเรียนและประธานคณะสี</p>
+      <label class="f"><span>รหัสผ่านผู้ดูแล</span><input type="password" id="lpass" autocomplete="current-password"></label>
+      <button class="btn pri" style="width:100%">เข้าสู่ระบบ</button>
+      <div class="err" id="lerr" role="alert"></div>
+      <a href="index.html?choose" style="display:block;text-align:center;font-size:13.5px;margin-top:6px">← หน้าแรก</a>
+    </form>
+    <div class="lfoot">ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ · โรงเรียนเทพศิรินทร์พุแค สระบุรี</div>
+  </div>
+</section>
+
+<!-- ===== หน้าหลัก ===== -->
+<section id="app" class="hide">
+ <div class="layout">
+  <nav class="side" id="nav">
+    <div class="brand"><div class="seal" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M4 13h16v7H4zM8 13V5l8 2v6"/></svg></div><div><b>ผู้ดูแลระบบ</b><small id="tName">-</small></div></div>
+    <button data-p="ctl" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>ภาพรวมวันเลือกตั้ง</button>
+    <button data-p="ros"><svg class="i" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h0M4 12h0M4 18h0"/></svg>บัญชีรายชื่อ</button>
+    <button data-p="sta"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" rx="2"/><rect x="14" y="4" width="7" height="16" rx="2"/><path d="M6.5 16h0M17.5 16h0"/></svg>จุดและคูหา</button>
+    <button data-p="can"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M18 14c2.2.6 3.5 2.6 3.5 6"/></svg>ผู้สมัคร</button>
+    <button data-p="pap"><svg class="i" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12l2 2 4-4M9 17h7"/></svg>บัตรกระดาษสำรอง</button>
+    <button data-p="liv"><svg class="i" viewBox="0 0 24 24"><path d="M3 12h3l3-7 4 14 3-7h5"/></svg>นับคะแนนสด</button>
+    <button data-p="sts"><svg class="i" viewBox="0 0 24 24"><path d="M4 20V10M9.3 20V5M14.6 20v-8M20 20V8M2 20h20"/></svg>สถิติผู้มาใช้สิทธิ์</button>
+    <button data-p="rep"><svg class="i" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6"/></svg>รายงานผล</button>
+    <button data-p="arc"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9M10 13h4"/></svg>เก็บถาวรและปีใหม่</button>
+    <button data-p="log"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>ประวัติ</button>
+    <button data-p="sec"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>ตั้งค่าและรหัส</button>
+    <div class="credit">ผู้พัฒนาระบบ<br>นายนิมิต ศรีวัฒนะ<br>โรงเรียนเทพศิรินทร์พุแค สระบุรี</div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="ttl" id="tTitle">ระบบเลือกตั้งบนเครื่อง</div>
+      <span class="stat" id="tStatus">-</span>
+      <span class="pill" id="tMode">-</span>
+      <button class="ibtn" id="btnOut" aria-label="ออกจากระบบ" title="ออกจากระบบ"><svg class="i" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 17l5-5-5-5M15 12H4"/></svg></button>
+    </div>
+
+    <!-- ภาพรวม -->
+    <section class="pane" id="p-ctl">
+      <h2>ภาพรวมวันเลือกตั้ง</h2>
+      <p class="lead">อัปเดตเองทุก 5 วินาที · ระหว่างเปิดลงคะแนนระบบแสดงเฉพาะยอดผู้มาใช้สิทธิ์ ผลคะแนนดูได้หลังปิด</p>
+      <div class="bento">
+        <div class="kpi hero c3"><span>ผู้มาใช้สิทธิ์</span><b class="num" id="kTurn">0</b><small>จาก <span id="kElig">0</span> คน</small><div class="mt"><i id="kBar"></i></div></div>
+        <div class="kpi c3"><span>ร้อยละผู้มาใช้สิทธิ์</span><b class="num" id="kPct">0%</b><small id="kPaper">&nbsp;</small></div>
+        <div class="kpi c3"><span>อยู่ในคูหาขณะนี้</span><b class="num" id="kIn">0</b><small>คน</small></div>
+        <div class="kpi c3"><span>ยังไม่มาใช้สิทธิ์</span><b class="num" id="kLeft">0</b><small>คน</small></div>
+
+        <div class="box c7">
+          <h3><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></svg>สถานะการลงคะแนน</h3>
+          <div class="sched" id="sched"></div>
+          <div class="row" id="statusBtns"></div>
+          <div id="sealInfo"></div>
+          <div class="ready" id="ready"></div>
+          <div class="recon" id="closeInfo"></div>
+        </div>
+        <div class="box c5">
+          <h3><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>หน้าจอแสดงผล</h3>
+          <div class="seg" id="modeSeg">
+            <button data-m="TURNOUT">ยอดผู้มาใช้สิทธิ์</button>
+            <button data-m="LIVE">นับคะแนนสด</button>
+            <button data-m="FINAL">ประกาศผล</button>
+          </div>
+          <p class="lead" style="margin:10px 0 0" id="modeHint"></p>
+          <label class="chk"><input type="checkbox" class="altChk"> ตอนประกาศผล ให้จอสลับหน้าผลทางการกับกระดานนับสด</label>
+          <span class="flab" style="margin-top:12px">ผลคณะสีบนจอ (ตอนประกาศผล)</span>
+          <div class="seg" id="viewSeg">
+            <button data-v="GRID">แบ่งจอทุกสี</button>
+            <button data-v="CYCLE">วนทีละสี</button>
+          </div>
+        </div>
+
+        <div class="box c12">
+          <h3><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" rx="2"/><rect x="14" y="4" width="7" height="16" rx="2"/></svg>จุดเลือกตั้งและคูหา</h3>
+          <div id="stLive"></div>
+        </div>
+
+        <div class="box c7">
+          <h3><svg class="i" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>ผู้มาใช้สิทธิ์แยกระดับชั้น</h3>
+          <div id="byLevel"></div>
+        </div>
+        <div class="box c5">
+          <h3><svg class="i" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><circle cx="16" cy="8" r="4"/><circle cx="12" cy="15" r="4"/></svg>ผู้มาใช้สิทธิ์แยกคณะสี</h3>
+          <div id="byHouse"></div>
+        </div>
+
+        <div class="box c12">
+          <h3><svg class="i" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 01-12 0z"/></svg>ผลการเลือกตั้ง</h3>
+          <div id="results"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- บัญชีรายชื่อ -->
+    <section class="pane hide" id="p-ros">
+      <h2>บัญชีรายชื่อ</h2>
+      <p class="lead">นำเข้าได้เฉพาะก่อนเปิดลงคะแนน · คณะสีสร้างให้อัตโนมัติจากชื่อสีในรายชื่อนักเรียน · รายชื่อครูนำเข้าแยกในกล่องที่สอง</p>
+      <div class="box">
+        <h3>นำเข้ารายชื่อนักเรียน</h3>
+        <p class="lead" style="margin:-4px 0 4px">คัดลอกตารางจาก Excel หรือ Google Sheets แล้ววางในช่องด้านล่าง (มีแถวหัวตารางหรือไม่ก็ได้) หรือเลือกไฟล์ .csv · เรียงคอลัมน์ดังนี้</p>
+        <div class="cols"><span>ระดับชั้น/ห้อง</span><span>เลขประจำตัวนักเรียน</span><span>คำนำหน้า</span><span>ชื่อ</span><span>สกุล</span><span>คณะสี</span></div>
+        <textarea class="paste" id="paste" placeholder="ม.1/1&#9;12001&#9;ด.ช.&#9;สมชาย&#9;ใจดี&#9;คณะสีแดง"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="btnCheck">ตรวจข้อมูล</button>
+          <label class="btn ghost" style="cursor:pointer">เลือกไฟล์ .csv<input type="file" id="csvFile" accept=".csv,.txt,text/csv" hidden></label>
+        </div>
+        <div id="preview"></div>
+      </div>
+      <div class="box tbox">
+        <div class="thead"><h3>รายชื่อครู</h3><span class="tcount" id="tCount">ยังไม่มี</span></div>
+        <p class="lead" style="margin:-4px 0 4px">ครูได้ <b>บัตรประธานนักเรียน</b> และ <b>บัตรประธานคณะสีของตน</b> คะแนนรวมกับนักเรียน · ลงคะแนนที่ <b id="tStName">-</b> (เปลี่ยนที่เมนู จุดและคูหา) · นำเข้ารายชื่อนักเรียนก่อน เพื่อให้มีคณะสีครบ</p>
+        <div class="cols"><span>รหัสครู</span><span>คำนำหน้า</span><span>ชื่อ</span><span>สกุล</span><span>คณะสี</span></div>
+        <textarea class="paste tpaste" id="tPaste" placeholder="T001&#9;นาย&#9;สมชาย&#9;ใจดี&#9;คณะสีแดง"></textarea>
+        <p class="lead" style="margin:6px 0 0">รหัสครูโรงเรียนกำหนดเอง เช่น T001 · ไม่ซ้ำกับเลขประจำตัวนักเรียน · ไม่มีเว้นวรรค · <b>ห้ามใช้เลขบัตรประชาชน</b></p>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="btnTCheck">ตรวจข้อมูล</button>
+          <label class="btn ghost" style="cursor:pointer">เลือกไฟล์ .csv<input type="file" id="tCsv" accept=".csv,.txt,text/csv" hidden></label>
+          <button class="btn ghost" id="btnTClear" style="color:var(--red);margin-left:auto">ลบรายชื่อครูทั้งหมด</button>
+        </div>
+        <div id="tPreview"></div>
+      </div>
+      <div class="box">
+        <h3>ค้นหารายชื่อ</h3>
+        <div class="row" style="margin-bottom:10px">
+          <input type="text" id="rq" placeholder="เลขประจำตัว รหัสครู ชื่อ หรือห้อง (เช่น ม.2/3 หรือ ครู)" style="flex:1;min-width:200px">
+          <button class="btn" id="btnRq">ค้นหา</button>
+        </div>
+        <div class="tbl"><table id="rTable"></table></div>
+        <p class="lead" id="rInfo" style="margin:8px 0 0"></p>
+      </div>
+    </section>
+
+    <!-- จุดและคูหา -->
+    <section class="pane hide" id="p-sta">
+      <h2>จุดเลือกตั้งและคูหา</h2>
+      <p class="lead">กำหนดระดับชั้นให้แต่ละจุด นักเรียนใช้สิทธิ์ได้เฉพาะจุดของตน · ผูกเครื่องคูหาด้วยรหัส 6 หลัก</p>
+      <form class="box" id="stForm">
+        <h3>จุดเลือกตั้ง</h3>
+        <p class="lead" style="margin:-4px 0 4px">ระดับชั้นคั่นด้วยจุลภาค เช่น <b>ม.1, ม.2, ม.3</b> หรือระบุห้อง เช่น <b>ม.4/1</b> · แก้ได้ตอนยังไม่เปิดหรือพักการลงคะแนน</p>
+        <div id="stRows"></div>
+        <div class="tst"><label class="f"><span>ครูลงคะแนนที่</span><select class="f2" id="tStSel"></select></label><p class="lead" id="tStHint"></p></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn ghost" type="button" id="btnAddSt">+ เพิ่มจุด</button>
+          <button class="btn pri">บันทึกจุดเลือกตั้ง</button>
+        </div>
+        <p class="lead" id="stInfo" style="margin:10px 0 0"></p>
+      </form>
+      <div class="box">
+        <h3>คูหาเลือกตั้ง</h3>
+        <p class="lead" style="margin:-4px 0 0">ที่เครื่องคูหา เปิดหน้า <b>คูหาเลือกตั้ง</b> แล้วพิมพ์รหัส 6 หลักของคูหานั้น · ออกรหัสใหม่เมื่อเปลี่ยนเครื่อง (เครื่องเดิมจะใช้ไม่ได้)</p>
+        <div id="bList"></div>
+      </div>
+    </section>
+
+    <!-- ผู้สมัคร -->
+    <section class="pane hide" id="p-can">
+      <h2>ผู้สมัคร</h2>
+      <p class="lead">บัตรใบที่ 1 ประธานนักเรียน · บัตรใบที่ 2 ประธานคณะสี (นักเรียนเห็นเฉพาะสีของตน) · เพิ่ม/ลบได้ก่อนเปิดลงคะแนน</p>
+      <div class="box pub">
+        <div>
+          <h3><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.7.8 2.8 2.5 3 5.2"/></svg>หน้าแนะนำผู้สมัคร (สำหรับนักเรียน)</h3>
+          <span class="pubst" id="pubSt"><i></i><span>-</span></span>
+          <p class="lead" style="margin:8px 0 0" id="pubHint">นักเรียนเปิดดูรูป นโยบาย ทีมงาน และคลิปของผู้สมัครได้จากมือถือ · ระบบงดแสดงเองระหว่างเปิดลงคะแนน</p>
+          <label class="chk"><input type="checkbox" id="pubChk"> เผยแพร่หน้าแนะนำผู้สมัคร</label>
+          <div class="row" style="margin-top:12px">
+            <a class="btn sm" id="pubOpen" target="_blank" rel="noopener">เปิดดูหน้า</a>
+            <a class="btn sm" id="pubPoster" target="_blank" rel="noopener">พิมพ์ป้าย QR</a>
+            <button class="btn sm ghost" type="button" id="pubCopy">คัดลอกลิงก์</button>
+          </div>
+        </div>
+        <div class="qr" id="pubQr" title="QR หน้าแนะนำผู้สมัคร"></div>
+      </div>
+      <div class="tabs" id="bTabs"></div>
+      <div class="plist" id="plist"></div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="btnAddCand"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span id="addLab">เพิ่มผู้สมัคร</span></button></div>
+      <form class="box hide" id="pForm" style="margin-top:14px;max-width:760px">
+        <h3 id="pfTitle">เพิ่มผู้สมัคร</h3>
+        <div class="grid2">
+          <label class="f"><span>เบอร์</span><input type="number" id="pNo" min="1" max="99" inputmode="numeric"></label>
+          <label class="f"><span id="pNameLab">ชื่อพรรค / ทีม</span><input type="text" id="pName" maxlength="60"></label>
+        </div>
+        <label class="f"><span>ชื่อ-สกุล ผู้สมัคร</span><input type="text" id="pPres" maxlength="80"></label>
+        <span class="flab">สีพื้นการ์ด</span>
+        <div class="swatches" id="swatches"></div>
+        <div class="imgs hide" id="pImgs">
+          <div class="imgbox"><div id="prevPhoto"></div><label class="btn sm" style="cursor:pointer">อัปโหลดรูปผู้สมัคร<input type="file" id="filePhoto" accept="image/*" hidden></label></div>
+          <div class="imgbox"><div id="prevLogo"></div><label class="btn sm" style="cursor:pointer">อัปโหลดโลโก้<input type="file" id="fileLogo" accept="image/*" hidden></label></div>
+        </div>
+        <p class="lead hide" id="pImgHint" style="margin-top:8px">บันทึกก่อน แล้วจึงอัปโหลดรูปและกรอกนโยบายได้</p>
+        <div class="row" style="margin-top:16px">
+          <button class="btn pri" type="submit">บันทึก</button>
+          <button class="btn ghost" type="button" id="pCancel">ปิด</button>
+        </div>
+        <div class="info hide" id="pInfo">
+          <h4>ข้อมูลบนหน้าแนะนำผู้สมัคร</h4>
+          <p class="lead" style="margin:0 0 10px">แก้ได้ตลอด แม้เปิดลงคะแนนแล้ว · ไม่มีผลกับบัตรในคูหา</p>
+          <label class="f"><span>นโยบาย (บรรทัดละข้อ ไม่เกิน 5 ข้อ)</span><textarea id="iPolicy" maxlength="900" placeholder="ห้องน้ำสะอาดทุกตึก&#10;ตู้กดน้ำเย็นทุกอาคาร&#10;เพิ่มชมรมดนตรี"></textarea><div class="cnt" id="iPolCnt"></div></label>
+          <label class="f"><span>ทีมงาน (บรรทัดละคน รูปแบบ ชื่อ | ตำแหน่ง ไม่เกิน 8 คน)</span><textarea id="iTeam" maxlength="900" placeholder="นายเอ ใจดี | รองประธาน&#10;นางสาวบี รักเรียน | เลขานุการ"></textarea><div class="cnt" id="iTeamCnt"></div></label>
+          <label class="f"><span>ลิงก์คลิปแนะนำตัว (YouTube)</span><input type="text" id="iVideo" inputmode="url" placeholder="https://youtu.be/xxxxxxxxxxx"></label>
+          <div class="row" style="margin-top:14px"><button class="btn pri" type="button" id="iSave">บันทึกข้อมูลแนะนำ</button></div>
+        </div>
+      </form>
+      <form class="box" id="hForm" style="margin-top:14px;max-width:760px">
+        <h3>คณะสี</h3>
+        <p class="lead" style="margin:-4px 0 4px">ชื่อและสีที่แสดงบนบัตรและจอ (คณะสีมาจากบัญชีรายชื่อ)</p>
+        <div id="hRows"></div>
+        <div class="row" style="margin-top:12px"><button class="btn pri">บันทึกคณะสี</button></div>
+      </form>
+    </section>
+
+    <!-- รายงาน -->
+    <section class="pane hide" id="p-pap">
+      <h2>บัตรกระดาษสำรอง</h2>
+      <p class="lead">ใช้เมื่อระบบใช้งานไม่ได้และต้องเปลี่ยนไปใช้บัตรกระดาษ · ทำเครื่องหมายผู้ใช้บัตรกระดาษเพื่อกันลงคะแนนซ้ำบนเครื่อง แล้วกรอกผลนับบัตรกระดาษ ระบบรวมกับคะแนนบนเครื่องให้อัตโนมัติ</p>
+      <div class="box">
+        <h3>1. ผู้ใช้บัตรกระดาษ</h3>
+        <p class="lead" style="margin:-4px 0 8px">วางเลขประจำตัวนักเรียน (บรรทัดละคน หรือคั่นด้วยเว้นวรรค/จุลภาค) · ทำได้เฉพาะคนที่ยังไม่ได้ลงคะแนนบนเครื่อง</p>
+        <textarea id="papSids" style="height:110px" placeholder="30012&#10;30013&#10;30014"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn pri" id="btnPapOn">ทำเครื่องหมาย “ใช้บัตรกระดาษ”</button>
+          <button class="btn ghost" id="btnPapOff">ยกเลิกเครื่องหมาย</button>
+        </div>
+        <div id="papMsg" class="lead" style="margin:10px 0 0"></div>
+        <div id="papSum" style="margin-top:12px"></div>
+        <div class="tbl" style="max-height:320px;overflow:auto;margin-top:8px"><table id="papTable"></table></div>
+      </div>
+      <div class="box">
+        <h3>2. ผลนับบัตรกระดาษ</h3>
+        <div class="row" id="papTabs" style="margin-bottom:12px"></div>
+        <div id="papForm"></div>
+      </div>
+    </section>
+
+    <!-- นับคะแนนสด -->
+    <section class="pane hide" id="p-liv">
+      <h2>นับคะแนนสด</h2>
+      <p class="lead">หลังปิดหีบ ระบบทยอยเปิดผลทีละชุดจากทุกหีบ แบบคืนเลือกตั้ง · ลำดับชุดสุ่มและเก็บไว้ที่หลังบ้าน จอเห็นเฉพาะชุดที่เปิดแล้ว</p>
+      <div class="lock hide" id="lvLock"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><span id="lvLockTx">นับคะแนนสดได้หลังปิดหีบเท่านั้น</span></div>
+      <div class="bento" id="lvBody">
+        <div class="box c5 lvctl">
+          <h3><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>ควบคุมการนับ</h3>
+          <div class="lvst"><span class="lvdot" id="lvDot"></span><b id="lvState">-</b><span class="nx" id="lvNext"></span></div>
+          <div class="lvbig"><b class="num" id="lvPct">0%</b><small id="lvStep">-</small></div>
+          <div class="lvmeter" id="lvMeter"></div>
+          <div class="lvkey" id="lvKey"></div>
+          <div id="lvWarn"></div>
+          <div class="grid2 lvset">
+            <label class="f"><span>จำนวนชุดทั้งหมด</span><select class="f2" id="lvSteps"><option>10</option><option>15</option><option selected>20</option><option>30</option><option>40</option><option>60</option></select></label>
+            <label class="f"><span>เปิดชุดละ (วินาที)</span><select class="f2" id="lvInt"><option>5</option><option>10</option><option selected>15</option><option>20</option><option>30</option><option>45</option><option>60</option></select></label>
+          </div>
+          <label class="chk" id="lvShowWrap"><input type="checkbox" id="lvShow" checked> ขึ้นจอแสดงผลพร้อมเริ่มนับ</label>
+          <div class="row" id="lvBtns"></div>
+          <div class="row sub hide" id="lvBtns2"><button class="btn sm ghost" data-lv="RESTART">เริ่มนับใหม่</button><button class="btn sm ghost" data-lv="RESET">ล้างกระดาน</button></div>
+          <p class="lead" id="lvHint" style="margin:12px 0 0"></p>
+        </div>
+        <div class="box c7 lvside">
+          <h3><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>บนจอแสดงผล</h3>
+          <div class="seg" id="lvModeSeg">
+            <button data-m="TURNOUT">ยอดผู้มาใช้สิทธิ์</button>
+            <button data-m="LIVE">นับคะแนนสด</button>
+            <button data-m="FINAL">ประกาศผล</button>
+          </div>
+          <label class="chk"><input type="checkbox" class="altChk"> ตอนประกาศผล ให้จอสลับหน้าผลทางการกับกระดานนับสด</label>
+          <span class="flab" style="margin-top:16px">หีบ</span>
+          <div class="lvboxes" id="lvBoxes"></div>
+          <span class="flab" style="margin-top:16px">ข่าววิ่ง</span>
+          <ol class="lvfeed" id="lvFeed"></ol>
+        </div>
+        <div class="box c12">
+          <h3><svg class="i" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>กระดานคะแนน <small style="font-weight:500;color:var(--muted);font-size:13px">(ผู้ดูแลเห็นเหมือนจอ)</small></h3>
+          <div class="lvraces" id="lvRaces"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- สถิติ -->
+    <section class="pane hide" id="p-sts">
+      <h2>สถิติผู้มาใช้สิทธิ์</h2>
+      <p class="lead">จำนวนคนรายชั่วโมงและร้อยละรายห้อง · ไม่มีคะแนนรายห้องหรือรายชั่วโมง · หลังปิดหีบจอแสดงผลจะสลับแสดงสถิตินี้ระหว่างรอประกาศผล <span id="stAt"></span></p>
+      <div class="skpi" id="stKpi"></div>
+      <div id="stDays"></div>
+      <div class="box" style="margin-top:14px">
+        <h3><svg class="i" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12M9 21v-6h6v6"/></svg>ร้อยละการมาใช้สิทธิ์รายห้อง</h3>
+        <div class="rfil" id="stFil"></div>
+        <div id="stRooms"></div>
+      </div>
+    </section>
+
+    <section class="pane hide" id="p-rep">
+      <h2>รายงานผล</h2>
+      <p class="lead">ผลคะแนนในรายงานแสดงได้หลังปิดลงคะแนน · พิมพ์แล้วเลือก “บันทึกเป็น PDF” ได้</p>
+      <div class="box" style="max-width:760px">
+        <h3>รายชื่อกรรมการที่ลงนาม</h3>
+        <p class="lead" style="margin:-4px 0 10px">บรรทัดละคน รูปแบบ: ชื่อ-สกุล | ตำแหน่ง</p>
+        <textarea id="committee" style="height:120px" placeholder="นายสมชาย ใจดี | ประธานกรรมการ&#10;นางสาวสมศรี รักเรียน | กรรมการ"></textarea>
+        <div class="row" style="margin-top:12px">
+          <button class="btn ghost" id="btnSaveCom">บันทึกรายชื่อ</button>
+          <select id="repSel" style="height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:#fff"></select>
+          <button class="btn pri" id="btnPrint"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 14h10v7H7z"/></svg>พิมพ์รายงาน</button>
+        </div>
+      </div>
+      <div class="rep-wrap"><div id="report"></div></div>
+    </section>
+
+    <!-- เก็บถาวรและปีการศึกษาใหม่ -->
+    <section class="pane hide" id="p-arc">
+      <h2>เก็บถาวรและปีการศึกษาใหม่</h2>
+      <p class="lead">ทำปีละครั้งหลังประกาศผล · เก็บผลปีนี้ไว้ใน Google Drive ของบัญชีเจ้าของระบบ แล้วล้างระบบให้พร้อมใช้ปีถัดไป</p>
+      <ol class="aflow">
+        <li class="astep" id="aStep1">
+          <div class="anum">1</div>
+          <div class="abody">
+            <h3>เก็บถาวรผลการเลือกตั้งปีนี้</h3>
+            <div class="astate" id="aState1"></div>
+            <ul class="alist">
+              <li><b>รายงานผลทั้งหมด</b> เป็น PDF และ HTML ใช้รายชื่อกรรมการจากหน้า “รายงานผล”</li>
+              <li><b>สรุปผล ผู้มาใช้สิทธิ์ และสถิติ</b> เป็นไฟล์ JSON ไม่มีรายชื่อนักเรียน</li>
+              <li><b>สำเนา Google Sheet ทั้งไฟล์</b> มีรายชื่อนักเรียน เก็บไว้ในบัญชีเจ้าของระบบ ไม่แชร์ใคร</li>
+            </ul>
+            <div class="row"><button class="btn pri" id="btnArchive"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9M10 13h4"/></svg>เก็บถาวร</button><a class="btn ghost hide" id="aOpen" target="_blank" rel="noopener">เปิดโฟลเดอร์ใน Drive</a></div>
+          </div>
+        </li>
+        <li class="astep red" id="aStep2">
+          <div class="anum">2</div>
+          <div class="abody">
+            <h3>ล้างระบบสำหรับปีการศึกษาใหม่</h3>
+            <div class="astate" id="aState2"></div>
+            <div class="acols">
+              <div><h5>ลบทั้งหมด</h5><p>บัญชีรายชื่อนักเรียน · ผู้สมัคร · คะแนนและการใช้สิทธิ์ · บัตรกระดาษ · จุดและคูหา · คณะสี · ประวัติ · การตั้งค่า</p></div>
+              <div><h5>กลับเป็นค่าเริ่มต้น</h5><p>รหัสผู้ดูแล <b class="num">admin1234</b> · PIN กรรมการ <b class="num">1234</b> · ต้องผูกเครื่องคูหาใหม่ · ทุกเครื่องต้องเข้าสู่ระบบใหม่</p></div>
+              <div><h5>เก็บไว้</h5><p>รายการผลที่เก็บถาวรด้านล่าง · ไฟล์ทั้งหมดในโฟลเดอร์เก็บถาวร · ไฟล์รูปผู้สมัครเดิมใน Drive</p></div>
+            </div>
+            <div class="row"><button class="btn red" id="btnNewYear">ล้างระบบสำหรับปีการศึกษาใหม่</button></div>
+          </div>
+        </li>
+      </ol>
+      <div class="box">
+        <h3>ผลการเลือกตั้งที่เก็บไว้</h3>
+        <div id="aList"><p class="lead" style="margin:0">กำลังโหลด…</p></div>
+      </div>
+    </section>
+
+    <!-- ประวัติ -->
+    <section class="pane hide" id="p-log">
+      <h2>ประวัติการดำเนินการ</h2>
+      <p class="lead">การเข้าสู่ระบบ การตรวจตัวตน การคืนสิทธิ์ และการตั้งค่าทุกครั้ง (ไม่มีข้อมูลว่าใครเลือกใคร)</p>
+      <div class="box"><div class="tbl"><table id="logTable"></table></div>
+        <div class="row" style="margin-top:12px"><button class="btn sm" id="btnMore">โหลดเพิ่ม</button><button class="btn sm" id="btnReloadLog">รีเฟรช</button></div></div>
+    </section>
+
+    <!-- ตั้งค่าและรหัส -->
+    <section class="pane hide" id="p-sec">
+      <h2>ตั้งค่าและรหัส</h2>
+      <p class="lead">เปลี่ยนรหัสเริ่มต้นก่อนใช้งานจริง</p>
+      <form class="box" id="setForm" style="max-width:760px">
+        <h3>การเลือกตั้ง</h3>
+        <label class="f"><span>ชื่อการเลือกตั้ง</span><input type="text" id="sName" maxlength="100"></label>
+        <div class="grid2">
+          <label class="f"><span>ปีการศึกษา</span><input type="text" id="sYear" maxlength="10" inputmode="numeric"></label>
+          <label class="f"><span>ชื่อตำแหน่งบนบัตรใบที่ 1</span><input type="text" id="sPres" maxlength="40"></label>
+        </div>
+        <label class="f"><span>คูหาไม่มีการกดนานเท่านี้ ยกเลิกบัตรและคืนสิทธิ์ (วินาที)</span><input type="number" id="sTimeout" min="60" max="900" inputmode="numeric"></label>
+        <h3 style="margin-top:18px">วันเลือกตั้ง</h3>
+        <p class="lead" style="margin:-4px 0 10px">ระบบให้เปิดลงคะแนนได้เฉพาะวันที่ตั้งไว้ · เว้นวันล่วงหน้าว่าง = ไม่มีการเลือกตั้งล่วงหน้า</p>
+        <div class="grid2">
+          <label class="f"><span>วันเลือกตั้งล่วงหน้า</span><input type="date" id="sAdv"></label>
+          <label class="f"><span>วันเลือกตั้งจริง</span><input type="date" id="sMain"></label>
+        </div>
+        <label class="f"><span>จุดที่เปิดวันเลือกตั้งล่วงหน้า (รับนักเรียนทุกระดับชั้น)</span><select class="f2" id="sAdvSt"></select></label>
+        <p class="lead" id="sDateNote" style="margin:-4px 0 12px"></p>
+        <button class="btn pri">บันทึกการตั้งค่า</button>
+      </form>
+      <div class="bento">
+        <form class="box c4" id="fAdmin">
+          <h3>รหัสผ่านผู้ดูแล</h3>
+          <label class="f"><span>รหัสใหม่ (อย่างน้อย 6 ตัว)</span><input type="password" id="newAdmin" autocomplete="new-password"></label>
+          <button class="btn pri">เปลี่ยนรหัสผู้ดูแล</button>
+        </form>
+        <form class="box c4" id="fPin">
+          <h3>PIN เครื่องกรรมการ</h3>
+          <label class="f"><span>PIN ใหม่ (ตัวเลข 4–8 หลัก)</span><input type="password" id="newPin" inputmode="numeric" maxlength="8" autocomplete="new-password"></label>
+          <button class="btn pri">เปลี่ยน PIN</button>
+        </form>
+        <div class="box c4" style="border-color:#f1c9c5;background:#fffafa">
+          <h3 style="color:var(--red)">ล้างการเลือกตั้ง</h3>
+          <p style="margin:0 0 14px;font-size:14px;color:var(--muted)">ใช้หลังซ้อม ล้างคะแนนและสถานะการใช้สิทธิ์ทั้งหมด (รายชื่อและผู้สมัครคงเดิม) ระบบสำรองชีตไว้ก่อน ทำได้ก่อนเปิดหรือหลังปิดลงคะแนน</p>
+          <button class="btn red" id="btnReset">ล้างการเลือกตั้ง</button>
+        </div>
+      </div>
+    </section>
+    <div class="mainfoot">ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ · โรงเรียนเทพศิรินทร์พุแค สระบุรี</div>
+  </div>
+ </div>
+</section>
+
+<div class="veil hide" id="veil"><div class="dlg" id="dlg" role="dialog" aria-modal="true">
+  <h3 id="dTitle"></h3><p id="dText"></p>
+  <div id="dInputWrap" class="hide"><textarea id="dInput"></textarea></div>
+  <div class="err" id="dErr"></div>
+  <div class="row"><button class="btn ghost" id="dNo">ยกเลิก</button><button class="btn pri" id="dYes">ยืนยัน</button></div>
+</div></div>
+<div class="toast hide" id="toast" role="status"></div>
+<div class="busy hide" id="busy"></div>
+
+<script>
+/* =========================================================
+   ส่วนที่ 2 : หน้าผู้ดูแลระบบ (ระบบเลือกตั้งบนเครื่อง)
+   ========================================================= */
+var A = { token: null, data: null, tab: 'PRES', editing: null, color: '#1d5a36', logLimit: 100, stDirty: false, setDirty: false, hDirty: false, comDirty: false, parsed: null };
+var COLORS = ['#1d5a36', '#2f8f4e', '#c9a00a', '#d9822b', '#b3261e', '#c2185b', '#6a3d9a', '#2b5fa8', '#0f7c8c', '#4e4e4e'];
+var ST_NAME = { SETUP: 'ยังไม่เปิด', OPEN: 'เปิดลงคะแนน', PAUSED: 'พักการลงคะแนน', SEALED: 'ปิดรอบล่วงหน้า (พักหีบ)', CLOSED: 'ปิดลงคะแนนแล้ว' };
+var PH_NAME = { ADV: 'วันล่วงหน้า', MAIN: 'วันจริง' };
+/** ชื่อสถานะพร้อมวัน เช่น "เปิดลงคะแนน · วันล่วงหน้า" */
+function stName(st) { return ST_NAME[st.status] + ((st.status === 'OPEN' || st.status === 'PAUSED') && st.advDate && st.phase ? ' · ' + PH_NAME[st.phase] : ''); }
+var VOTER_NAME = { '': 'ยังไม่ใช้สิทธิ์', ISSUED: 'อยู่ในคูหา', VOTED: 'ใช้สิทธิ์แล้ว', PAPER: 'บัตรกระดาษ' };
+var esc = EV.esc, fmt = EV.fmt;
+function $(id) { return document.getElementById(id); }
+function toast(m, bad) { var t = $('toast'); t.textContent = m; t.className = 'toast' + (bad ? ' bad' : ''); clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = 'toast hide'; }, 3200); }
+
+var busyN = 0;
+function api(fn, args, ok, quiet) {
+  if (!quiet) { busyN++; $('busy').classList.remove('hide'); }
+  var done = function () { if (!quiet && --busyN <= 0) { busyN = 0; $('busy').classList.add('hide'); } };
+  EV.call(fn, args).then(function (res) { done(); ok && ok(res); }, function (err) {
+    done();
+    var m = String(err && err.message || err);
+    if (m.indexOf('AUTH') > -1) { logoutLocal('หมดเวลาเข้าสู่ระบบ กรุณาเข้าใหม่'); return; }
+    if (!quiet) toast('เกิดข้อผิดพลาด: ' + m.replace(/^OFFLINE: /, ''), true);
+  });
+}
+
+/* ---------- กล่องยืนยัน ---------- */
+function dialog(o) {
+  $('dTitle').textContent = o.title; $('dText').textContent = o.text || '';
+  $('dlg').className = 'dlg' + (o.danger ? ' danger' : '');
+  $('dYes').className = 'btn ' + (o.danger ? 'red' : 'pri'); $('dYes').textContent = o.yes || 'ยืนยัน';
+  $('dInputWrap').classList.toggle('hide', !o.input);
+  $('dNo').classList.toggle('hide', !!o.noCancel); $('dText').style.whiteSpace = 'pre-line';
+  $('dInput').value = ''; $('dInput').placeholder = o.placeholder || ''; $('dErr').textContent = '';
+  $('veil').classList.remove('hide');
+  if (o.input) setTimeout(function () { $('dInput').focus(); }, 50);
+  $('dNo').onclick = function () { $('veil').classList.add('hide'); };
+  $('dYes').onclick = function () {
+    var v = $('dInput').value.trim();
+    if (o.input && o.required && !v) { $('dErr').textContent = o.required; return; }
+    if (o.match && v !== o.match) { $('dErr').textContent = 'พิมพ์ให้ตรงว่า "' + o.match + '"'; return; }
+    $('veil').classList.add('hide'); o.onYes(v);
+  };
+}
+
+/* ---------- เข้าสู่ระบบ ---------- */
+$('loginForm').onsubmit = function (e) {
+  e.preventDefault();
+  if (!EV.ready) { $('lerr').textContent = 'ยังไม่ได้ใส่ลิงก์ /exec ในไฟล์ app.js'; return; }
+  $('lerr').textContent = 'กำลังตรวจสอบ...';
+  api('login', ['admin', $('lpass').value], function (res) {
+    if (!res.ok) { $('lerr').textContent = res.message; return; }
+    $('lpass').value = ''; $('lerr').textContent = '';
+    A.token = res.token; try { sessionStorage.setItem('ev_admin', res.token); } catch (e) {}
+    enter();
+  });
+};
+function logoutLocal(msg) {
+  A.token = null; try { sessionStorage.removeItem('ev_admin'); } catch (e) {}
+  $('app').classList.add('hide'); $('login').classList.remove('hide'); $('lerr').textContent = msg || '';
+}
+$('btnOut').onclick = function () { api('logout', [A.token], function () {}, true); logoutLocal(''); };
+function enter() { $('login').classList.add('hide'); $('app').classList.remove('hide'); load(); }
+function load(quiet) { api('getAdminData', [A.token], function (d) { A.data = d; renderAll(); }, quiet); }
+setInterval(function () { if (A.token && document.visibilityState === 'visible' && $('veil').classList.contains('hide')) load(true); }, 5000);
+
+/* ---------- เมนู ---------- */
+$('nav').onclick = function (e) {
+  var btn = e.target.closest('button[data-p]'); if (!btn) return;
+  var p = btn.getAttribute('data-p');
+  [].forEach.call($('nav').querySelectorAll('button[data-p]'), function (b) { b.classList.toggle('on', b === btn); });
+  ['ctl', 'ros', 'sta', 'can', 'pap', 'liv', 'sts', 'rep', 'arc', 'log', 'sec'].forEach(function (k) { $('p-' + k).classList.toggle('hide', k !== p); });
+  if (p === 'sts' || p === 'rep') loadStats();
+  if (p === 'log') loadLog();
+  if (p === 'arc') loadArchives();
+  if (p === 'liv') loadLive();
+  if (p === 'pap') loadPaper();
+  if (p === 'rep') renderReport();
+  if (p === 'ros' && !$('rTable').innerHTML) searchRoster();
+  window.scrollTo(0, 0);
+};
+
+/* ---------- บัตรกระดาษสำรอง ---------- */
+var P = { data: null, tab: 'PRES' };
+function loadPaper() { api('getPaperData', [A.token], function (d) { P.data = d; renderPaper(); }); }
+function houseName(gid) { var h = (P.data.houses || []).filter(function (x) { return x.gid === gid; })[0]; return h ? h.name : gid; }
+function renderPaper() {
+  var d = P.data;
+  $('papSum').innerHTML = '<span class="pill">ใช้บัตรกระดาษ <b class="num" style="margin-left:4px">' + fmt(d.voters.length) + '</b>&nbsp;คน</span> ' +
+    d.houses.map(function (h) { return '<span class="pill"><span class="sw" style="background:' + esc(h.color) + '"></span>' + esc(h.name) + ' ' + fmt(d.byHouse[h.gid] || 0) + '</span>'; }).join(' ');
+  $('papTable').innerHTML = d.voters.length ? '<thead><tr><th>เลขประจำตัว</th><th>ห้อง</th><th>ชื่อ-สกุล</th><th>คณะสี</th><th>เวลา</th></tr></thead><tbody>' +
+    d.voters.map(function (v) { return '<tr><td class="num">' + esc(v[0]) + '</td><td>' + esc(v[1]) + '</td><td>' + esc(v[2]) + '</td><td>' + esc(houseName(v[3])) + '</td><td class="num">' + esc(v[4]) + '</td></tr>'; }).join('') + '</tbody>' : '';
+  var tabs = [{ k: 'PRES', n: 'ประธานนักเรียน' }].concat(d.houses.map(function (h) { return { k: h.gid, n: 'ประธาน' + h.name }; }));
+  $('papTabs').innerHTML = tabs.map(function (t) { return '<button class="btn sm ' + (t.k === P.tab ? 'pri' : 'ghost') + '" data-pt="' + esc(t.k) + '">' + esc(t.n) + '</button>'; }).join('');
+  var cands = d.candidates.filter(function (c) { return c.ballot === P.tab; }).sort(function (a, b) { return a.no - b.no; });
+  var cur = d.counts[P.tab] || {};
+  var voters = P.tab === 'PRES' ? d.voters.length : (d.byHouse[P.tab] || 0);
+  var rows = cands.map(function (c) { return { k: 'P' + c.no, n: 'หมายเลข ' + c.no + ' ' + c.presidentName, sub: c.partyName }; })
+    .concat([{ k: 'VOTE_NO', n: 'ไม่ประสงค์ลงคะแนน' }, { k: 'INVALID', n: 'บัตรเสีย' }]);
+  $('papForm').innerHTML = (cands.length ? '<div class="tbl"><table><tbody>' + rows.map(function (r) {
+    return '<tr><td>' + esc(r.n) + (r.sub ? '<br><small style="color:var(--muted)">' + esc(r.sub) + '</small>' : '') + '</td>' +
+      '<td style="width:140px"><input type="number" min="0" max="5000" class="num papIn" data-k="' + r.k + '" value="' + (cur[r.k] || 0) + '" style="text-align:right"></td></tr>';
+  }).join('') + '</tbody></table></div>' +
+    '<p id="papTot" class="lead" style="margin:10px 0"></p><button class="btn pri" id="btnPapSave">บันทึกผลนับบัตรนี้</button>'
+    : '<p class="lead">บัตรนี้ยังไม่มีผู้สมัคร</p>');
+  var tot = function () {
+    var t = 0; [].forEach.call(document.querySelectorAll('.papIn'), function (i) { t += Math.max(0, parseInt(i.value, 10) || 0); });
+    var el = $('papTot'); if (!el) return;
+    el.innerHTML = 'รวม <b class="num">' + fmt(t) + '</b> ใบ · ผู้ใช้บัตรกระดาษ' + (P.tab === 'PRES' ? '' : 'ของคณะสีนี้') + ' <b class="num">' + fmt(voters) + '</b> คน' +
+      (t > voters ? ' <span style="color:var(--red);font-weight:700">— จำนวนบัตรมากกว่าผู้ใช้สิทธิ์ ตรวจสอบอีกครั้ง</span>' : t < voters ? ' <span style="color:var(--gold9);font-weight:700">— ยังไม่ครบ</span>' : ' <span style="color:var(--g);font-weight:700">— ตรงกัน</span>');
+  };
+  tot();
+  [].forEach.call(document.querySelectorAll('.papIn'), function (i) { i.oninput = tot; });
+  if ($('btnPapSave')) $('btnPapSave').onclick = function () {
+    var counts = {}; [].forEach.call(document.querySelectorAll('.papIn'), function (i) { counts[i.getAttribute('data-k')] = Math.max(0, parseInt(i.value, 10) || 0); });
+    api('savePaperCounts', [A.token, P.tab, counts], function (r) { if (!r.ok) return toast(r.message, true); toast('บันทึกผลนับบัตรกระดาษแล้ว รวม ' + r.total + ' ใบ'); loadPaper(); load(true); });
+  };
+}
+$('papTabs').onclick = function (e) { var b = e.target.closest('[data-pt]'); if (!b) return; P.tab = b.getAttribute('data-pt'); renderPaper(); };
+function markPaper(on) {
+  var sids = $('papSids').value.split(/[\s,]+/).filter(String);
+  if (!sids.length) return toast('กรุณาใส่เลขประจำตัว', true);
+  dialog({ title: (on ? 'ทำเครื่องหมายใช้บัตรกระดาษ ' : 'ยกเลิกเครื่องหมาย ') + sids.length + ' คน?', text: on ? 'นักเรียนกลุ่มนี้จะลงคะแนนบนเครื่องไม่ได้ และนับเป็นผู้มาใช้สิทธิ์' : 'นักเรียนกลุ่มนี้จะกลับไปเป็น “ยังไม่ได้ใช้สิทธิ์”', yes: 'ยืนยัน',
+    onYes: function () {
+      api('markPaper', [A.token, sids, on], function (r) {
+        if (!r.ok) return toast(r.message, true);
+        $('papMsg').innerHTML = 'ดำเนินการแล้ว ' + r.changed + ' คน' + (r.skipped.length ? ' · ข้าม ' + r.skipped.length + ' คน: ' + r.skipped.map(function (x) { return esc(x.sid) + ' (' + esc(x.reason) + ')'; }).join(', ') : '');
+        if (!r.skipped.length) $('papSids').value = '';
+        loadPaper(); load(true);
+      });
+    } });
+}
+$('btnPapOn').onclick = function () { markPaper(true); };
+$('btnPapOff').onclick = function () { markPaper(false); };
+
+function renderAll() {
+  var d = A.data, st = d.settings;
+  $('tName').textContent = st.electionName + (st.academicYear ? ' · ' + st.academicYear : '');
+  $('tTitle').textContent = st.electionName;
+  $('tStatus').textContent = stName(st); $('tStatus').className = 'stat ' + st.status;
+  $('tMode').textContent = 'จอ: ' + MODE_NAME[st.displayMode] + (st.displayMode === 'FINAL' && st.liveAlt ? ' + นับสด' : '');
+  renderControl(d);
+  if (!A.stDirty) renderStations(d);
+  renderTeacherBox(d);
+  renderBooths(d);
+  renderCandidates(d);
+  if (!A.hDirty) renderHouses(d);
+  if (!A.setDirty) fillSettings(st);
+  if (!$('p-rep').classList.contains('hide')) renderReport();
+  if (!$('p-arc').classList.contains('hide')) { var ak = st.status + st.displayMode + (st.archived ? st.archived.at : ''); if (AR.key !== ak) { AR.key = ak; loadArchives(true); } else renderArchives(); }
+}
+
+/* ================= ภาพรวม ================= */
+/** ปุ่มตามสถานะ: [to, ข้อความ, สี, ต้องเป็นวันไหน] */
+function btnsFor(st) {
+  var two = !!st.advDate, s = st.status, adv = st.phase === 'ADV';
+  var closeTxt = two ? 'ปิดหีบ (รวม 2 วัน)' : 'ปิดลงคะแนน';
+  if (s === 'SETUP') return two ? [['ADV', 'เปิดเลือกตั้งล่วงหน้า', 'pri', st.advDate], ['OPEN', 'เปิดเลือกตั้งจริง', 'ghost', st.mainDate]] : [['OPEN', 'เปิดลงคะแนน', 'pri', st.mainDate]];
+  if (s === 'OPEN') return adv ? [['PAUSED', 'พักการลงคะแนน', 'yel'], ['SEALED', 'ปิดรอบล่วงหน้า (พักหีบ)', 'red']] : [['PAUSED', 'พักการลงคะแนน', 'yel'], ['CLOSED', closeTxt, 'red']];
+  if (s === 'PAUSED') return adv ? [['OPEN', 'เปิดต่อ', 'pri', st.advDate], ['SEALED', 'ปิดรอบล่วงหน้า (พักหีบ)', 'red']] : [['OPEN', 'เปิดต่อ', 'pri', st.mainDate], ['CLOSED', closeTxt, 'red']];
+  if (s === 'SEALED') return [['OPEN', 'เปิดเลือกตั้งจริง', 'pri', st.mainDate], ['VERIFY', 'ตรวจตราประทับหีบ', 'ghost'], ['CLOSED', 'ปิดหีบโดยไม่มีวันจริง', 'ghost']];
+  if (s === 'CLOSED') return [['OPEN', 'เปิดลงคะแนนใหม่', 'ghost', st.mainDate]];
+  return [];
+}
+function thaiD(ymd) {
+  var m = String(ymd || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); if (!m) return '-';
+  var MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  return (+m[3]) + ' ' + MON[+m[2] - 1] + ' ' + (+m[1] + 543);
+}
+function renderControl(d) {
+  var s = d.summary, st = d.settings;
+  $('kTurn').textContent = fmt(s.turnout); $('kElig').textContent = fmt(s.eligible);
+  $('kBar').style.width = (s.eligible ? Math.min(100, s.turnout / s.eligible * 100) : 0) + '%';
+  $('kPct').textContent = s.turnoutPct.toFixed(2) + '%';
+  var br = s.byRound || {};
+  $('kPaper').textContent = (st.advDate ? 'ล่วงหน้า ' + fmt(br.ADV || 0) + ' · วันจริง ' + fmt(br.MAIN || 0) + (s.paperVoters ? ' · ' : '') : '') + (s.paperVoters ? 'บัตรกระดาษ ' + fmt(s.paperVoters) + ' คน' : '') || ' ';
+  $('kIn').textContent = fmt(s.inProgress); $('kLeft').textContent = fmt(s.eligible - s.turnout - s.inProgress);
+
+  var today = (s.schedule || {}).today || '';
+  $('sched').innerHTML = st.advDate ? [
+      ['ADV', 'เลือกตั้งล่วงหน้า · ' + esc((s.schedule || {}).advStationName || ''), st.advDate],
+      ['MAIN', 'เลือกตั้งจริง · ทุกจุด', st.mainDate]
+    ].map(function (x) {
+      var done = x[0] === 'ADV' && (st.status === 'SEALED' || st.phase === 'MAIN' || st.status === 'CLOSED');
+      return '<div class="' + (x[2] === today ? 'now' : '') + (done ? ' done' : '') + '"><small>' + x[1] + (x[2] === today ? ' · วันนี้' : '') + (done ? ' · ปิดรอบแล้ว' : '') + '</small><b>' + thaiD(x[2]) + '</b></div>';
+    }).join('') : (st.mainDate ? '<div class="' + (st.mainDate === today ? 'now' : '') + '"><small>วันเลือกตั้ง' + (st.mainDate === today ? ' · วันนี้' : '') + '</small><b>' + thaiD(st.mainDate) + '</b></div>' : '');
+  $('statusBtns').innerHTML = '<span style="margin-right:6px">ตอนนี้: <b>' + stName(st) + '</b></span>' +
+    btnsFor(st).map(function (x) {
+      var wrong = x[3] && x[3] !== today;
+      return '<button class="btn ' + x[2] + '" data-s="' + x[0] + '"' + (wrong ? ' disabled title="เปิดได้วันที่ ' + thaiD(x[3]) + '"' : '') + '>' + x[1] + (wrong ? ' <small style="font-weight:500">(' + thaiD(x[3]) + ')</small>' : '') + '</button>';
+    }).join('');
+
+  // รายการตรวจความพร้อม (ก่อนเปิด)
+  var rd = $('ready');
+  if (st.status === 'SETUP') {
+    var noSt = s.byStation.reduce(function (a, x) { return a - x.eligible; }, s.eligible);
+    var pres = d.candidates.filter(function (c) { return c.ballot === 'PRES'; }).length;
+    var hNo = d.houses.filter(function (h) { return !d.candidates.some(function (c) { return c.ballot === h.gid; }); });
+    var unp = d.booths.filter(function (b) { return !b.paired; });
+    var items = [
+      [s.eligible > 0, s.eligible ? 'บัญชีรายชื่อ ' + fmt(s.eligible) + ' คน' : 'ยังไม่ได้นำเข้าบัญชีรายชื่อ'],
+      [s.eligible > 0 && noSt === 0, noSt ? 'มีนักเรียน ' + fmt(noSt) + ' คนยังไม่มีจุดเลือกตั้ง' : 'นักเรียนทุกคนมีจุดเลือกตั้ง'],
+      [pres > 0, pres ? 'ผู้สมัครประธานนักเรียน ' + pres + ' คน' : 'ยังไม่มีผู้สมัครประธานนักเรียน'],
+      [d.houses.length > 0 && !hNo.length, !d.houses.length ? 'ยังไม่มีคณะสี' : hNo.length ? 'ยังไม่มีผู้สมัคร: ' + hNo.map(function (h) { return h.name; }).join(', ') : 'มีผู้สมัครประธานครบทุกคณะสี'],
+      [!unp.length, unp.length ? 'คูหาที่ยังไม่ผูกเครื่อง ' + unp.length + ' คูหา' : 'ผูกเครื่องครบทุกคูหา'],
+      [!!st.mainDate, st.mainDate ? (st.advDate ? 'เลือกตั้งล่วงหน้า ' + thaiD(st.advDate) + ' · วันจริง ' + thaiD(st.mainDate) : 'วันเลือกตั้ง ' + thaiD(st.mainDate)) : 'ยังไม่ได้ตั้งวันเลือกตั้ง (ตั้งในเมนู ตั้งค่าและรหัส)']
+    ];
+    rd.innerHTML = items.map(function (x) { return '<div class="' + (x[0] ? 'y' : 'n') + '"><i>' + (x[0] ? '✓' : '!') + '</i>' + esc(x[1]) + '</div>'; }).join('');
+  } else rd.innerHTML = '';
+  var ci = $('closeInfo'), seal = st.seal;
+  $('sealInfo').innerHTML = seal ? '<div class="sealbox' + (/ไม่ตรง/.test(seal.verified || '') ? ' bad' : '') + '"><small>ตราประทับหีบ (ปิดรอบล่วงหน้า ' + esc(seal.at || '') + ')</small><b>' + esc(seal.code) + '</b>' +
+    '<span>' + (seal.verified ? 'ตรวจก่อนเปิดวันจริง: ' + esc(seal.verified) : 'บัตรในหีบ ' + fmt(seal.ballots) + ' ใบ · พิมพ์ “รายงานรอบล่วงหน้า” ให้กรรมการลงชื่อ ระบบจะตรวจรหัสนี้ก่อนเปิดวันจริง') + '</span></div>' : '';
+  if (st.status === 'SEALED') { ci.className = 'recon short'; ci.textContent = 'พักหีบ: ปลดล็อกคูหาไม่ได้ ผลคะแนนยังเป็นความลับ · ใช้สิทธิ์ล่วงหน้าแล้ว ' + fmt(br.ADV || 0) + ' คน · เลือกตั้งจริง ' + thaiD(st.mainDate); }
+  else if (st.status === 'OPEN' && st.phase === 'ADV') { ci.className = 'recon'; ci.textContent = 'วันเลือกตั้งล่วงหน้า: เปิดเฉพาะ' + ((s.schedule || {}).advStationName || '') + ' รับนักเรียนทุกระดับชั้น จุดอื่นปลดล็อกไม่ได้'; }
+  else if (st.status === 'CLOSED') { ci.className = 'recon ok'; ci.textContent = 'ปิดลงคะแนนเมื่อ ' + (st.closedAt || '-') + (st.closeNote ? ' · หมายเหตุ: ' + st.closeNote : ''); }
+  else if (st.status === 'PAUSED') { ci.className = 'recon short'; ci.textContent = 'พักอยู่: เครื่องกรรมการปลดล็อกคูหาไม่ได้ (นักเรียนที่อยู่ในคูหาลงคะแนนต่อได้)'; }
+  else { ci.className = 'recon'; ci.textContent = ''; }
+
+  syncModeSegs(st);
+  [].forEach.call($('viewSeg').children, function (x) { x.classList.toggle('on', x.getAttribute('data-v') === st.groupView); });
+  $('modeHint').textContent = st.status === 'CLOSED' ? 'ปิดหีบแล้ว เลือก “นับคะแนนสด” เพื่อทยอยเปิดผลทีละชุด หรือ “ประกาศผล” เพื่อขึ้นผลทั้งหมดทันที' : st.status === 'SEALED' ? 'พักหีบ: จอแสดงยอดผู้ใช้สิทธิ์ล่วงหน้าและวันเลือกตั้งจริง · ประกาศผลได้หลังปิดหีบ' : 'ระหว่างเปิดลงคะแนน จอแสดงเฉพาะยอดผู้มาใช้สิทธิ์ · ประกาศผลได้หลังปิด';
+
+  // จุดและคูหา (สด)
+  $('stLive').innerHTML = s.byStation.map(function (x) {
+    var stn = d.stations.filter(function (y) { return y.stid === x.stid; })[0] || {};
+    var bs = d.booths.filter(function (b) { return b.stid === x.stid; });
+    return '<div class="stn"><div><h4>' + esc(x.name) + '</h4><small>' + esc(stn.levels || '-') + '</small>' +
+      '<div class="tb"><i style="width:' + Math.min(100, x.pct) + '%"></i></div>' +
+      '<div class="tn"><b class="num">' + fmt(x.turnout) + '</b> / ' + fmt(x.eligible) + ' คน · ' + x.pct.toFixed(1) + '%' + (x.inProgress ? ' · ในคูหา ' + x.inProgress : '') + '</div></div>' +
+      '<div class="tiles">' + (bs.length ? bs.map(boothTile).join('') : '<div class="lead">ยังไม่มีคูหา</div>') + '</div></div>';
+  }).join('') || '<p class="lead">ยังไม่มีจุดเลือกตั้ง</p>';
+
+  $('byLevel').innerHTML = s.byLevel.length ? s.byLevel.map(function (x) { var h = hbar(x.level, x.turnout, x.eligible, x.pct, x.teacher ? 'var(--gold)' : 'var(--g)'); return x.teacher ? h.replace('class="hbar"', 'class="hbar tch"') : h; }).join('') : '<p class="lead">ยังไม่มีรายชื่อ</p>';
+  $('byHouse').innerHTML = s.byHouse.length ? s.byHouse.map(function (x) { return hbar('<span class="sw" style="background:' + esc(x.color) + '"></span>' + esc(x.name), x.turnout, x.eligible, x.pct, esc(x.color), true); }).join('') : '<p class="lead">ยังไม่มีคณะสี</p>';
+  renderResults(d);
+}
+function boothTile(b) {
+  var cls, txt;
+  if (!b.paired) { cls = 'b-np'; txt = 'ยังไม่ผูกเครื่อง'; }
+  else if (!b.online) { cls = 'b-off'; txt = b.seenSec == null ? 'ยังไม่เคยเชื่อมต่อ' : 'ขาดการติดต่อ ' + b.seenSec + ' วิ'; }
+  else if (b.state === 'LOCKED') { cls = 'b-free'; txt = 'ว่าง'; }
+  else { cls = 'b-busy'; txt = b.state === 'IN_USE' ? 'กำลังลงคะแนน' : 'ปลดล็อกแล้ว'; }
+  return '<div class="tile ' + cls + '"><b>' + esc(b.name) + '</b><span>' + txt + (b.pending ? ' · คะแนนรอส่ง ' + b.pending : '') + '</span></div>';
+}
+function hbar(label, v, of, pct, color, raw) {
+  return '<div class="hbar"><span>' + (raw ? label : esc(label)) + '</span><div class="bar"><i style="width:' + Math.min(100, pct) + '%;background:' + color + '"></i></div>' +
+    '<span class="v"><b class="num">' + fmt(v) + '</b>/' + fmt(of) + ' · ' + pct.toFixed(1) + '%</span></div>';
+}
+
+$('statusBtns').onclick = function (e) {
+  var b = e.target.closest('button[data-s]'); if (!b || b.disabled) return;
+  var to = b.getAttribute('data-s'), st = A.data.settings, cur = st.status, two = !!st.advDate;
+  var advName = (A.data.summary.schedule || {}).advStationName || 'จุดล่วงหน้า';
+  if (to === 'VERIFY') return verifySeal();
+  if (to === 'ADV') return dialog({ title: 'เปิดเลือกตั้งล่วงหน้า?', text: 'เปิดเฉพาะ' + advName + ' รับนักเรียนทุกระดับชั้น จุดอื่นปลดล็อกไม่ได้ · หลังเปิดแล้ว นำเข้ารายชื่อและเพิ่ม/ลบผู้สมัครไม่ได้', yes: 'เปิดเลือกตั้งล่วงหน้า', onYes: function () { doStatus(to, {}); } });
+  if (to === 'SEALED') return dialog({ title: 'ปิดรอบล่วงหน้า (พักหีบ)?', text: 'ปลดล็อกคูหาไม่ได้จนถึงวันเลือกตั้งจริง ผลคะแนนยังเป็นความลับ ระบบจะออกตราประทับหีบ ให้พิมพ์ “รายงานรอบล่วงหน้า” ให้กรรมการลงชื่อ', danger: true, yes: 'ปิดรอบล่วงหน้า', onYes: function () { doStatus(to, {}); } });
+  if (to === 'OPEN' && cur === 'SEALED') return dialog({ title: 'เปิดเลือกตั้งจริง?', text: 'ระบบจะตรวจตราประทับหีบก่อน ถ้าไม่ตรงกับที่บันทึกไว้จะไม่เปิด · วันจริงแต่ละจุดรับเฉพาะระดับชั้นของตน', yes: 'ตรวจหีบและเปิด', onYes: function () { doStatus(to, {}); } });
+  if (to === 'OPEN' && cur === 'SETUP' && two) return dialog({ title: 'เปิดเลือกตั้งจริงโดยข้ามวันล่วงหน้า?', text: 'ตั้งวันล่วงหน้าไว้ ' + thaiD(st.advDate) + ' ถ้าเปิดวันจริงเลย จะไม่มีการเลือกตั้งล่วงหน้า', yes: 'เปิดเลือกตั้งจริง', onYes: function () { doStatus(to, {}); } });
+  if (to === 'CLOSED' && cur === 'SEALED') return dialog({ title: 'ปิดหีบโดยไม่เปิดวันเลือกตั้งจริง?', text: 'ใช้เมื่อยกเลิกวันจริง ผลจะนับเฉพาะคะแนนวันล่วงหน้า ต้องระบุเหตุผล', danger: true, input: true, required: 'กรุณาระบุเหตุผล', placeholder: 'เหตุผล', yes: 'ปิดหีบ', onYes: function (v) { doStatus(to, { note: v }); } });
+  if (to === 'CLOSED' && two) return dialog({ title: 'ปิดหีบ?', text: 'รวมคะแนนวันล่วงหน้าและวันจริง เครื่องกรรมการจะปลดล็อกคูหาไม่ได้อีก และผลคะแนนจะเปิดให้ผู้ดูแลเห็น', danger: true, yes: 'ปิดหีบ', onYes: function () { doStatus(to, {}); } });
+  if (to === 'OPEN' && cur === 'CLOSED') return dialog({ title: 'เปิดลงคะแนนใหม่หลังปิดแล้ว', text: 'ต้องระบุเหตุผล ผลคะแนนจะถูกซ่อนอีกครั้งจนกว่าจะปิด', input: true, required: 'กรุณาระบุเหตุผล', placeholder: 'เหตุผล', onYes: function (v) { doStatus(to, { note: v }); } });
+  if (to === 'CLOSED') return dialog({ title: 'ปิดลงคะแนน?', text: 'เครื่องกรรมการจะปลดล็อกคูหาไม่ได้อีก และผลคะแนนจะเปิดให้ผู้ดูแลเห็น', danger: true, yes: 'ปิดลงคะแนน', onYes: function () { doStatus(to, {}); } });
+  if (to === 'OPEN' && cur === 'SETUP') return dialog({ title: 'เปิดลงคะแนน?', text: 'หลังเปิดแล้ว นำเข้ารายชื่อและเพิ่ม/ลบผู้สมัครไม่ได้', yes: 'เปิดลงคะแนน', onYes: function () { doStatus(to, {}); } });
+  doStatus(to, {});
+};
+function doStatus(to, opts) {
+  api('setStatus', [A.token, to, opts], function (res) {
+    if (res.ok) { toast(to === 'ADV' ? 'เปิดเลือกตั้งล่วงหน้าแล้ว' : to === 'SEALED' ? 'ปิดรอบล่วงหน้าแล้ว ตราประทับหีบ ' + (res.summary.seal ? res.summary.seal.code : '') : 'เปลี่ยนสถานะเป็น ' + ST_NAME[to] + ' แล้ว'); return load(true); }
+    if (res.need === 'PENDING') return dialog({ title: 'คูหายังมีคะแนนรอส่ง', text: res.message + ' (ถ้าปิดตอนนี้ คะแนนที่ค้างจะไม่ถูกนับ)', danger: true, yes: 'ปิดโดยไม่รอ', onYes: function () { opts.force = true; doStatus(to, opts); } });
+    if (res.need === 'SEAL_MISMATCH') return dialog({ title: 'ตราประทับหีบไม่ตรง', danger: true, input: true, required: 'กรุณาระบุเหตุผล', placeholder: 'เหตุผลที่ยังเปิดต่อ (บันทึกในประวัติ)', yes: 'เปิดต่อโดยบันทึกเหตุผล',
+      text: 'รหัสที่บันทึกตอนปิดรอบล่วงหน้า ' + res.sealed + ' แต่คำนวณตอนนี้ได้ ' + res.current + ' แปลว่าข้อมูลคะแนนถูกเปลี่ยนระหว่างพักหีบ ควรหยุดและแจ้งประธานกรรมการก่อน',
+      onYes: function (v) { opts.force = true; opts.note = v; doStatus(to, opts); } });
+    if (res.need === 'IN_PROGRESS') return dialog({ title: 'มีนักเรียนอยู่ในคูหา', text: res.message, danger: true, yes: 'ปิดและคืนสิทธิ์', onYes: function () { opts.cancelInProgress = true; doStatus(to, opts); } });
+    if (res.need === 'NOTE') return dialog({ title: 'ต้องระบุเหตุผล', text: res.message, input: true, required: 'กรุณาระบุเหตุผล', onYes: function (v) { opts.note = v; doStatus(to, opts); } });
+    toast(res.message, true);
+  });
+}
+/** ตรวจตราประทับหีบ: เทียบรหัสที่บันทึกไว้กับที่คำนวณตอนนี้ */
+function verifySeal() {
+  api('verifySeal', [A.token], function (r) {
+    if (!r.ok) return toast(r.message, true);
+    var t = 'รหัสในรายงาน (ตอนปิดรอบล่วงหน้า ' + r.sealedAt + '): ' + r.sealed + '\nคำนวณตอนนี้: ' + r.current + '\n\n' +
+      (r.match === true ? 'ตรงกัน ข้อมูลคะแนนไม่ถูกแก้ไขระหว่างพักหีบ' : r.match === false ? 'ไม่ตรง ข้อมูลคะแนนถูกเปลี่ยนระหว่างพักหีบ ควรแจ้งประธานกรรมการ' : r.note);
+    dialog({ title: r.match === false ? 'ตราประทับหีบไม่ตรง' : 'ตรวจตราประทับหีบ', text: t, danger: r.match === false, yes: 'ปิด', noCancel: true, onYes: function () {} });
+  });
+}
+/** รายงานรอบล่วงหน้า: ตราประทับหีบ + ลงชื่อกรรมการ */
+function sealPage(d) {
+  var st = d.settings, seal = st.seal || {}, sch = d.summary.schedule || {};
+  return '<div class="rpage">' + head(d, 'รายงานการปิดรอบเลือกตั้งล่วงหน้า (พักหีบ)', '', true) +
+    '<h4>1. ข้อมูลรอบเลือกตั้งล่วงหน้า</h4><table><tbody>' +
+    '<tr><td>วันเลือกตั้งล่วงหน้า</td><td class="r">' + thaiD(st.advDate) + '</td><td>' + esc(sch.advStationName || '') + ' (รับทุกระดับชั้น)</td></tr>' +
+    '<tr><td>ปิดรอบล่วงหน้าเมื่อ</td><td class="r" colspan="2">' + esc(seal.at || '-') + '</td></tr>' +
+    '<tr><td>ผู้มาใช้สิทธิ์จนถึงเวลาปิดรอบ</td><td class="r">' + fmt(seal.turnout || 0) + '</td><td>คน</td></tr>' +
+    '<tr><td>บัตรประธานนักเรียนในหีบ</td><td class="r">' + fmt(seal.ballots || 0) + '</td><td>ใบ</td></tr>' +
+    '<tr><td>วันเลือกตั้งจริง (เปิดหีบนับต่อ)</td><td class="r">' + thaiD(st.mainDate) + '</td><td>ทุกจุด</td></tr></tbody></table>' +
+    '<h4>2. ตราประทับหีบ</h4><div class="rseal"><small>รหัสตรวจสอบหีบเลือกตั้ง</small><b>' + esc(seal.code || '-') + '</b><small>คำนวณจากคะแนนทั้งหมดในหีบตอนปิดรอบ · ผลคะแนนยังเป็นความลับจนกว่าจะปิดหีบวันจริง</small></div>' +
+    '<p style="margin:2mm 0">ก่อนเปิดเลือกตั้งจริง ระบบจะคำนวณรหัสนี้ใหม่และเทียบกับรหัสในรายงานฉบับนี้ ถ้าไม่ตรงกันแปลว่าข้อมูลคะแนนถูกแก้ไขระหว่างพักหีบ ระบบจะไม่เปิดวันจริงจนกว่าคณะกรรมการจะตรวจสอบ</p>' +
+    '<table><tbody><tr><td style="width:55%">ผลการตรวจก่อนเปิดวันเลือกตั้งจริง</td><td>' + (seal.verified ? esc(seal.verified) : '☐ ตรงกัน &nbsp;&nbsp; ☐ ไม่ตรง &nbsp;&nbsp; เวลา ........ น.') + '</td></tr></tbody></table>' +
+    '<p style="margin:10px 0 0">คณะกรรมการได้ปิดรอบเลือกตั้งล่วงหน้าและบันทึกรหัสตรวจสอบหีบข้างต้นแล้ว ขอรับรองว่าถูกต้อง</p>' + signs() + foot() + '</div>';
+}
+var MODE_NAME = { TURNOUT: 'ยอดผู้มาใช้สิทธิ์', LIVE: 'นับคะแนนสด', FINAL: 'ประกาศผล' };
+function syncModeSegs(st) {
+  ['modeSeg', 'lvModeSeg'].forEach(function (id) {
+    [].forEach.call($(id).children, function (x) {
+      var m = x.getAttribute('data-m');
+      x.classList.toggle('on', m === st.displayMode);
+      x.disabled = m !== 'TURNOUT' && st.status !== 'CLOSED';
+    });
+  });
+  [].forEach.call(document.querySelectorAll('.altChk'), function (c) { c.checked = !!st.liveAlt; c.disabled = st.status !== 'CLOSED'; });
+}
+/** ยังนับสดไม่ครบ? (ใช้ข้อมูลล่าสุดจากหน้านับสด ถ้ามี) */
+function liveUnfinished() {
+  var L = A.data.settings.live;
+  if (!L) return false;
+  if (A.live && A.live.state) return A.live.state === 'RUN' || A.live.state === 'PAUSE';
+  return true;
+}
+function pickMode(m) {
+  var st = A.data.settings;
+  if (!m || m === st.displayMode) return;
+  var go = function () {
+    api('setDisplayMode', [A.token, m], function (r) {
+      if (!r.ok) return toast(r.message, true);
+      toast('จอ: ' + MODE_NAME[m]); load(true); if (!$('p-liv').classList.contains('hide')) loadLive(true);
+    });
+  };
+  if (m === 'FINAL') return dialog({ title: 'ประกาศผลอย่างเป็นทางการ?', text: 'จอแสดงผลจะขึ้นผู้ได้รับเลือกตั้งของทุกบัตรทันที' + (liveUnfinished() ? '\nการนับคะแนนสดยังไม่ครบ ชุดที่เหลือจะเปิดทั้งหมด' : ''), yes: 'ประกาศผล', onYes: go });
+  if (m === 'LIVE' && !st.live) return dialog({ title: 'ขึ้นจอกระดานนับสด?', text: 'ยังไม่ได้เริ่มนับ จอจะแสดง “กำลังเตรียมนับคะแนน” จนกว่าจะกดเริ่มนับในเมนูนับคะแนนสด', yes: 'ขึ้นจอ', onYes: go });
+  go();
+}
+$('modeSeg').onclick = function (e) { pickMode(e.target.getAttribute('data-m')); };
+$('lvModeSeg').onclick = function (e) { pickMode(e.target.getAttribute('data-m')); };
+[].forEach.call(document.querySelectorAll('.altChk'), function (c) {
+  c.onchange = function () {
+    var on = c.checked, st = A.data.settings;
+    api('setDisplayMode', [A.token, st.displayMode, on], function (r) {
+      if (!r.ok) { c.checked = !on; return toast(r.message, true); }
+      toast(on ? 'ตอนประกาศผล จอจะสลับกับกระดานนับสด' : 'ตอนประกาศผล จอแสดงผลทางการอย่างเดียว'); load(true);
+    });
+  };
+});
+
+/* ================= นับคะแนนสด ================= */
+var LV_STATE = { IDLE: 'ยังไม่เริ่มนับ', RUN: 'กำลังนับ', PAUSE: 'หยุดชั่วคราว', DONE: 'นับครบแล้ว' };
+var LV_BOX_C = ['#17603a', '#2b5fa8', '#c9a00a', '#6a3d9a', '#4e4e4e'];
+var LV_BOX_DK = ['#5fd394', '#86b4ff', '#f2c230', '#c9a7ff', '#d0d6d2'];   // บนพื้นเขียวเข้ม
+function loadLive(quiet) {
+  api('liveStatus', [A.token], function (r) { A.live = r; A.liveAt = Date.now(); renderLive(); }, quiet !== false);
+}
+setInterval(function () {
+  if (!A.token || $('p-liv').classList.contains('hide') || document.visibilityState !== 'visible') return;
+  var L = A.live;
+  if (L && L.state === 'RUN') {
+    var left = L.nextIn - Math.floor((Date.now() - A.liveAt) / 1000);
+    $('lvNext').innerHTML = left > 0 ? 'ชุดถัดไปใน <b class="num">' + left + '</b> วินาที' : 'กำลังเปิดชุดถัดไป…';
+    if (left <= 0 && Date.now() - (A.livePoll || 0) > 1500) { A.livePoll = Date.now(); loadLive(); }
+  }
+  if (Date.now() - (A.livePoll || 0) > 4000 && $('veil').classList.contains('hide')) { A.livePoll = Date.now(); loadLive(); }
+}, 1000);
+function partyName(p) { return p.partyName || p.presidentName || ('เบอร์ ' + p.no); }
+function renderLive() {
+  var L = A.live; if (!L) return;
+  var closed = L.state !== 'NOT_CLOSED';
+  $('lvLock').classList.toggle('hide', closed); $('lvBody').classList.toggle('hide', !closed);
+  if (!closed) return;
+  var st = L.state, idle = st === 'IDLE';
+  $('lvDot').className = 'lvdot ' + st; $('lvState').textContent = LV_STATE[st] || st;
+  $('lvNext').innerHTML = st === 'RUN' ? 'ชุดถัดไปใน <b class="num">' + L.nextIn + '</b> วินาที' : st === 'PAUSE' ? 'กด “นับต่อ” หรือ “รายงานถัดไป”' : '';
+  $('lvPct').textContent = idle ? '0%' : (L.pct % 1 ? L.pct.toFixed(1) : L.pct) + '%';
+  $('lvStep').textContent = idle ? 'ยังไม่ได้สุ่มชุด' : 'ชุดที่ ' + L.step + ' จาก ' + L.steps + ' · นับแล้ว ' + fmt(L.counted) + ' / ' + fmt(L.total) + ' บัตร';
+  var boxes = L.boxes || [];
+  $('lvMeter').innerHTML = boxes.map(function (b, i) { return '<i style="width:' + (b.counted / L.total * 100).toFixed(2) + '%;background:' + LV_BOX_DK[i % 5] + '"></i>'; }).join('');
+  $('lvKey').innerHTML = boxes.map(function (b, i) { return '<span style="--c:' + LV_BOX_DK[i % 5] + '"><i></i>' + esc(b.name) + '</span>'; }).join('');
+  // คำเตือน
+  var w = '';
+  if (L.stale) w += '<div class="recon over">คะแนนเปลี่ยนหลังเริ่มนับ (เช่น แก้บัตรกระดาษ หรือคะแนนจากคูหามาถึงช้า) ผลนับสดจะไม่ตรงผลทางการ<button class="btn sm red" data-lv="RESTART">เริ่มนับใหม่</button></div>';
+  if (L.pendingBooths && L.pendingBooths.length) w += '<div class="recon short">คูหา ' + esc(L.pendingBooths.join(', ')) + ' ยังมีคะแนนรอส่ง ' + (idle ? 'ควรรอให้ส่งครบก่อนเริ่มนับ' : '') + '</div>';
+  $('lvWarn').innerHTML = w;
+  // ตั้งค่า
+  $('lvSteps').disabled = !idle;
+  if (!idle) { var so = $('lvSteps'); if (![].some.call(so.options, function (o) { return +o.value === L.steps; })) so.add(new Option(String(L.steps), String(L.steps))); so.value = String(L.steps); }
+  if (!idle && document.activeElement !== $('lvInt')) $('lvInt').value = String(L.interval);
+  $('lvShowWrap').classList.toggle('hide', !idle || L.displayMode === 'LIVE');
+  // ปุ่ม
+  var b = [];
+  if (idle) b.push(['START', 'เริ่มนับคะแนนสด', 'yel']);
+  if (st === 'RUN') b.push(['PAUSE', 'หยุดชั่วคราว', 'yel'], ['NEXT', 'รายงานถัดไป', 'ghost'], ['ALL', 'เปิดที่เหลือทั้งหมด', 'ghost']);
+  if (st === 'PAUSE') b.push(['RESUME', 'นับต่อ', 'yel'], ['NEXT', 'รายงานถัดไป', 'ghost'], ['ALL', 'เปิดที่เหลือทั้งหมด', 'ghost']);
+  if (st === 'DONE' && L.displayMode !== 'FINAL') b.push(['FINAL', 'ประกาศผลอย่างเป็นทางการ', 'yel']);
+  $('lvBtns2').classList.toggle('hide', idle);
+  $('lvBtns').innerHTML = b.map(function (x) { return '<button class="btn ' + x[2] + '" data-lv="' + x[0] + '">' + x[1] + '</button>'; }).join('');
+  var mins = Math.ceil(+$('lvSteps').value * +$('lvInt').value / 60);
+  $('lvHint').textContent = idle ? 'ใช้เวลาราว ' + mins + ' นาที · ปรับความเร็วได้ระหว่างนับ' :
+    st === 'DONE' ? (L.displayMode === 'FINAL' ? 'ประกาศผลอย่างเป็นทางการแล้ว' : 'นับครบทุกหีบแล้ว กด “ประกาศผลอย่างเป็นทางการ” เพื่อขึ้นผลทางการบนจอ') :
+    'เริ่มนับ ' + (L.startedAt || '') + (L.displayMode === 'LIVE' || L.displayMode === 'FINAL' ? '' : ' · จอยังไม่แสดงกระดานนับสด');
+  // หีบ
+  $('lvBoxes').innerHTML = boxes.length ? boxes.map(function (x, i) {
+    var lp = x.lead !== null && L.races[0] ? L.races[0].parties.filter(function (p) { return p.no === x.lead; })[0] : null;
+    return '<div class="lvbox" style="--c:' + (x.leadColor || '#cfd5cf') + '"><b>' + esc(x.name) + '</b><small class="num">' + fmt(x.counted) + ' / ' + fmt(x.total) + ' บัตร · ' + x.pct + '%</small>' +
+      '<div class="ld">' + (lp ? 'นำ: เบอร์ ' + lp.no + ' ' + esc(partyName(lp)) : x.tie ? 'คะแนนเท่ากัน' : x.counted ? 'ยังไม่มีผู้นำ' : 'รอนับ') + '</div>' +
+      '<div class="bar"><i style="width:' + x.pct + '%;background:' + LV_BOX_C[i % 5] + '"></i></div></div>';
+  }).join('') : '<p class="lead" style="margin:0">กดเริ่มนับแล้วระบบจะแบ่งหีบ: จุดเลือกตั้งแต่ละจุด หีบล่วงหน้า และบัตรกระดาษ</p>';
+  // กระดาน
+  $('lvRaces').innerHTML = (L.races || []).map(function (r) {
+    var max = Math.max.apply(null, r.parties.map(function (p) { return p.votes; }).concat([1]));
+    var rows = r.parties.slice().sort(function (a, b) { return b.votes - a.votes || a.no - b.no; }).map(function (p) {
+      var tag = r.clinch.state === 'WIN' && r.clinch.no === p.no ? '<span class="lvtag win">ชนะแน่นอน</span>' :
+        r.clinch.state === 'FAIL' && r.clinch.no === p.no ? '<span class="lvtag fail">ไม่ถึงกึ่งหนึ่งแน่นอน</span>' :
+        r.lead === p.no ? '<span class="lvtag lead">นำ</span>' : '';
+      return '<div class="lvp' + (p.out ? ' out' : '') + '"><div class="nm"><em>' + p.no + '</em>' + esc(partyName(p)) + tag + '</div>' +
+        '<div class="v"><b class="num">' + fmt(p.votes) + '</b> · ' + p.pct.toFixed(1) + '%</div><div class="bar"><i style="width:' + (p.votes / max * 100).toFixed(1) + '%;background:' + esc(p.color || '#17603a') + '"></i></div></div>';
+    }).join('');
+    var ex = 'ไม่ประสงค์ลงคะแนน ' + fmt(r.voteNo) + (r.invalid ? ' · บัตรเสีย ' + fmt(r.invalid) : '') + ' · ยังไม่นับ ' + fmt(r.remaining) +
+      (r.parties.length === 1 ? ' · ต้องได้ ' + fmt(r.majorityNeeded) + ' คะแนนขึ้นไป (เกินกึ่งหนึ่ง)' : '') +
+      (r.tieBreak ? ' · คะแนนเสมอ · ผลตัดสิน: หมายเลข ' + r.tieBreak.no + (r.tieBreak.method ? ' (' + esc(r.tieBreak.method) + ')' : '') : r.clinch.state === 'TIE' ? ' · คะแนนเสมอ รอคณะกรรมการตัดสิน' : '');
+    return '<div class="lvrace' + (r.ballot === 'PRES' ? ' pres' : '') + '" style="--c:' + esc(r.color || '#17603a') + '"><header>' + (r.ballot === 'PRES' ? '' : '<span class="sw"></span>') +
+      '<b>' + esc(r.title) + '</b><small class="num">นับแล้ว ' + fmt(r.counted) + ' / ' + fmt(r.total) + ' (' + r.pct + '%)</small></header>' + rows + '<div class="ex">' + ex + '</div></div>';
+  }).join('') || '<p class="lead" style="margin:0">ยังไม่เริ่มนับ</p>';
+  $('lvFeed').innerHTML = (L.events || []).map(function (e) { return '<li><span>ชุด ' + e.step + '</span><b>' + esc(e.text) + '</b></li>'; }).join('') || '<li><span>-</span>ยังไม่มีรายงาน</li>';
+}
+function liveDo(action, opts, after) {
+  api('liveControl', [A.token, action, opts || {}], function (r) {
+    if (r.need === 'PENDING') return dialog({ title: 'คูหายังมีคะแนนรอส่ง', text: r.message, danger: true, yes: 'เริ่มนับโดยไม่รอ', onYes: function () { opts.force = true; liveDo(action, opts, after); } });
+    if (!r.ok) return toast(r.message, true);
+    A.live = r.live; A.liveAt = Date.now(); renderLive(); after && after(); load(true);
+  });
+}
+function liveStart() {
+  var opts = { steps: +$('lvSteps').value, interval: +$('lvInt').value };
+  var show = $('lvShow').checked && !$('lvShowWrap').classList.contains('hide');
+  liveDo('START', opts, function () {
+    if (show) api('setDisplayMode', [A.token, 'LIVE'], function () { load(true); toast('เริ่มนับแล้ว · จอแสดงกระดานนับสด'); });
+    else toast('เริ่มนับคะแนนสดแล้ว');
+  });
+}
+$('lvBtns').onclick = $('lvBtns2').onclick = $('lvWarn').onclick = function (e) {
+  var a = e.target.getAttribute('data-lv'); if (!a) return;
+  var L = A.live || {};
+  if (a === 'START') return dialog({ title: 'เริ่มนับคะแนนสด?', text: 'แบ่งบัตรเป็น ' + $('lvSteps').value + ' ชุด เปิดชุดละ ' + $('lvInt').value + ' วินาที ลำดับชุดสุ่มโดยระบบ\nเริ่มแล้วผู้ดูแลหยุด ข้าม หรือเปลี่ยนความเร็วได้', yes: 'เริ่มนับ', onYes: liveStart });
+  if (a === 'RESTART') return dialog({ title: 'เริ่มนับใหม่?', text: 'สุ่มชุดใหม่จากคะแนนล่าสุด กระดานบนจอจะกลับไปเริ่มที่ 0%', danger: true, yes: 'เริ่มนับใหม่', onYes: function () { liveDo('START', { steps: L.steps || +$('lvSteps').value, interval: +$('lvInt').value }); } });
+  if (a === 'RESET') return dialog({ title: 'ล้างกระดานนับสด?', text: 'กลับไปก่อนเริ่มนับ ถ้าจอแสดงกระดานนับสดอยู่ จะกลับไปแสดงยอดผู้มาใช้สิทธิ์', danger: true, yes: 'ล้างกระดาน', onYes: function () { liveDo('RESET'); } });
+  if (a === 'ALL') return dialog({ title: 'เปิดชุดที่เหลือทั้งหมด?', text: 'จอจะขึ้นคะแนนครบ 100% ทันที (ยังไม่ประกาศผลอย่างเป็นทางการ)', yes: 'เปิดทั้งหมด', onYes: function () { liveDo('ALL'); } });
+  if (a === 'FINAL') return pickMode('FINAL');
+  liveDo(a);
+};
+$('lvInt').onchange = function () {
+  var L = A.live || {};
+  if (L.state === 'RUN' || L.state === 'PAUSE') liveDo('SPEED', { interval: +$('lvInt').value }, function () { toast('เปิดชุดละ ' + $('lvInt').value + ' วินาที'); });
+  else renderLive();
+};
+$('lvSteps').onchange = function () { renderLive(); };
+$('viewSeg').onclick = function (e) {
+  var v = e.target.getAttribute('data-v'); if (!v || v === A.data.settings.groupView) return;
+  api('setGroupView', [A.token, v], function (r) { if (r.ok) { toast(v === 'GRID' ? 'ผลคณะสี: แบ่งจอทุกสี' : 'ผลคณะสี: วนทีละสี'); load(true); } });
+};
+
+/* ---------- ผลการเลือกตั้ง (หลังปิด) ---------- */
+function renderResults(d) {
+  var box = $('results'), s = d.summary;
+  if (!s.results) {
+    box.innerHTML = '<div class="lock"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>ผลคะแนนเป็นความลับระหว่างการเลือกตั้ง ดูได้หลังปิดลงคะแนน</div>';
+    return;
+  }
+  if (box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;
+  var blocks = [s.results.president].concat(s.results.houses);
+  box.innerHTML = '<div class="rgrid">' + blocks.map(function (b) {
+    var isP = b.ballot === 'PRES', c = isP ? '#17603a' : b.color;
+    var rows = b.parties.slice().sort(function (x, y) { return y.votes - x.votes || x.no - y.no; }).map(function (p) {
+      return '<tr><td>เบอร์ ' + p.no + ' ' + esc(p.partyName) + '</td><td class="r num">' + fmt(p.votes) + '</td><td class="r">' + p.pct.toFixed(2) + '%</td></tr>';
+    }).join('') + '<tr><td>ไม่ประสงค์ลงคะแนน</td><td class="r num">' + fmt(b.voteNo) + '</td><td class="r">' + b.voteNoPct.toFixed(2) + '%</td></tr>' +
+      (b.invalid ? '<tr><td>บัตรเสีย (บัตรกระดาษ)</td><td class="r num">' + fmt(b.invalid) + '</td><td class="r">' + b.invalidPct.toFixed(2) + '%</td></tr>' : '');
+    var r = b.result || {}, win = b.parties.filter(function (p) { return p.no === r.winnerNo; })[0];
+    var rl = (win ? 'เบอร์ ' + win.no + ' ' + win.partyName + ' — ' : (r.leaders && r.leaders.length > 1 ? 'เบอร์ ' + r.leaders.join(', ') + ' — ' : '')) + (r.label || '');
+    var cls = /^WINNER/.test(r.state || '') ? 'ok' : (r.state === 'TIE' || r.state === 'NO_MAJORITY') ? 'bad' : '';
+    var tie = '';
+    if (r.state === 'TIE' && r.leaders && r.leaders.length > 1) {
+      tie = '<div class="tie" data-b="' + b.ballot + '"><div class="flab">คะแนนเสมอ — บันทึกผลตัดสินของคณะกรรมการ</div>' +
+        r.leaders.map(function (no) { var p = b.parties.filter(function (x) { return x.no === no; })[0]; return '<label><input type="radio" name="tie_' + b.ballot + '" value="' + no + '"> เบอร์ ' + no + ' ' + esc(p ? p.partyName : '') + '</label>'; }).join('') +
+        '<div class="row" style="margin-top:4px"><input type="text" value="จับสลาก" maxlength="100" style="flex:1;min-width:140px;height:40px"><button type="button" class="btn sm pri" data-tie="' + b.ballot + '">บันทึกผลตัดสิน</button></div></div>';
+    } else if (r.state === 'WINNER_TIEBREAK') {
+      tie = '<div class="tie"><button type="button" class="btn sm ghost" data-untie="' + b.ballot + '">ยกเลิกผลตัดสิน</button></div>';
+    }
+    return '<div class="rblk" style="--c:' + esc(c) + ';--on:' + EV.onColor(c) + '"><header><span>' + esc(b.title) + '</span><small>ผู้มาใช้สิทธิ์ ' + fmt(b.turnout) + ' · เกินกึ่งหนึ่ง ' + fmt(b.majorityNeeded) + '</small></header>' +
+      '<div class="in"><table><thead><tr><th>ผู้สมัคร</th><th class="r">คะแนน</th><th class="r">ร้อยละ</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="rl ' + cls + '">' + esc(rl) + '</div>' + tie + '</div></div>';
+  }).join('') + '</div>';
+}
+$('results').onclick = function (e) {
+  var t = e.target.getAttribute('data-tie'), u = e.target.getAttribute('data-untie');
+  if (t) {
+    var wrap = e.target.closest('.tie'), sel = wrap.querySelector('input[type=radio]:checked'), m = wrap.querySelector('input[type=text]').value.trim();
+    if (!sel) return toast('เลือกผู้ชนะก่อน', true);
+    if (!m) return toast('ระบุวิธีตัดสิน', true);
+    dialog({ title: 'ยืนยันผลตัดสิน', text: 'เบอร์ ' + sel.value + ' ได้รับเลือกตั้ง (ตัดสินโดย' + m + ')', yes: 'บันทึก', onYes: function () {
+      api('setTieBreak', [A.token, t, +sel.value, m], function (r) { if (r.ok) { toast('บันทึกผลตัดสินแล้ว'); load(true); } else toast(r.message, true); });
+    } });
+  }
+  if (u) dialog({ title: 'ยกเลิกผลตัดสิน?', danger: true, yes: 'ยกเลิก', onYes: function () { api('clearTieBreak', [A.token, u], function () { load(true); }); } });
+};
+
+/* ================= บัญชีรายชื่อ ================= */
+function csvSplit(l) {
+  var out = [], cur = '', q = false;
+  for (var i = 0; i < l.length; i++) {
+    var ch = l[i];
+    if (q) { if (ch === '"') { if (l[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"') q = true; else if (ch === ',') { out.push(cur); cur = ''; } else cur += ch;
+  }
+  out.push(cur); return out;
+}
+/** แปลงข้อความที่วาง → แถว [ห้อง, เลขประจำตัว, คำนำหน้า, ชื่อ, สกุล, คณะสี] (จัดคอลัมน์ตามหัวตารางถ้ามี) */
+function parseRoster(text) {
+  var tab = text.indexOf('\t') > -1;
+  var lines = text.replace(/\r/g, '').split('\n').map(function (l) { return (tab ? l.split('\t') : csvSplit(l)).map(function (c) { return c.trim(); }); })
+    .filter(function (r) { return r.some(function (c) { return c; }); });
+  if (!lines.length) return { rows: [], header: false };
+  var order = [0, 1, 2, 3, 4, 5], header = false, h = lines[0];
+  if (!h.some(function (c) { return /\d{3,}/.test(c); })) {
+    var find = function (re, not) { for (var i = 0; i < h.length; i++) if (re.test(h[i]) && !(not && not.test(h[i]))) return i; return -1; };
+    var m = [find(/ห้อง|ชั้น/), find(/เลข|รหัส/), find(/คำนำ/), find(/^ชื่อ|ชื่อ$/, /สกุล/), find(/สกุล/), find(/สี|คณะ/)];
+    if (m.filter(function (x) { return x > -1; }).length >= 4) { order = m; }
+    header = true; lines.shift();
+  }
+  return { header: header, rows: lines.map(function (r) { return order.map(function (i) { return i > -1 ? (r[i] || '') : ''; }); }) };
+}
+function normClass(s) { return String(s || '').replace(/\s+/g, '').replace(/^ม(?!\.)/, 'ม.'); }
+function stationFor(cls, stations) {
+  var c = normClass(cls);
+  for (var i = 0; i < stations.length; i++) {
+    var toks = stations[i].levels.split(/[,，]/).map(normClass).filter(Boolean);
+    for (var j = 0; j < toks.length; j++) if (c === toks[j] || c.indexOf(toks[j] + '/') === 0) return stations[i];
+  }
+  return null;
+}
+$('csvFile').onchange = function () {
+  var f = this.files[0]; this.value = ''; if (!f) return;
+  var fr = new FileReader();
+  fr.onload = function () { $('paste').value = String(fr.result).replace(/^﻿/, ''); checkPaste(); };
+  fr.readAsText(f, 'utf-8');
+};
+$('btnCheck').onclick = checkPaste;
+function checkPaste() {
+  var p = parseRoster($('paste').value);
+  A.parsed = p;
+  var box = $('preview');
+  if (!p.rows.length) { box.innerHTML = '<p class="note" style="margin-top:12px">ยังไม่มีข้อมูล วางตารางรายชื่อก่อน</p>'; return; }
+  var seen = {}, dup = 0, bad = 0, houses = {}, lv = {}, noSt = {};
+  var stations = A.data ? A.data.stations : [];
+  p.rows.forEach(function (r) {
+    if (!r[1] || !r[0] || !r[3]) { bad++; return; }
+    if (seen[r[1]]) dup++; seen[r[1]] = 1;
+    if (r[5]) houses[r[5]] = (houses[r[5]] || 0) + 1;
+    var l = normClass(r[0]).split('/')[0]; lv[l] = (lv[l] || 0) + 1;
+    if (!stationFor(r[0], stations)) noSt[l] = 1;
+  });
+  var ok = p.rows.length - dup - bad;
+  var st = A.data ? A.data.settings.status : 'SETUP';
+  box.innerHTML = '<div class="pv"><div><b class="num">' + fmt(ok) + '</b><small>คนที่นำเข้าได้</small></div>' +
+    '<div class="' + (dup ? 'bad' : '') + '"><b class="num">' + dup + '</b><small>เลขประจำตัวซ้ำ (ข้าม)</small></div>' +
+    '<div class="' + (bad ? 'bad' : '') + '"><b class="num">' + bad + '</b><small>แถวข้อมูลไม่ครบ (ข้าม)</small></div>' +
+    '<div class="' + (Object.keys(noSt).length ? 'bad' : '') + '"><b class="num">' + Object.keys(noSt).length + '</b><small>ระดับชั้นที่ยังไม่มีจุด</small></div></div>' +
+    '<span class="flab">คณะสีที่พบ</span><div class="chips" style="margin-bottom:10px">' + Object.keys(houses).map(function (h) { return '<span>' + esc(h) + ' · ' + fmt(houses[h]) + '</span>'; }).join('') + '</div>' +
+    '<span class="flab">ระดับชั้น</span><div class="chips" style="margin-bottom:10px">' + Object.keys(lv).sort(function (a, b) { return a.localeCompare(b, 'th', { numeric: true }); }).map(function (l) {
+      var s = stationFor(l + '/1', stations); return '<span>' + esc(l) + ' · ' + fmt(lv[l]) + ' คน → ' + (s ? esc(s.name) : '<b style="color:var(--red)">ไม่มีจุด</b>') + '</span>';
+    }).join('') + '</div>' +
+    '<div class="tbl"><table><thead><tr><th>ห้อง</th><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th><th>คณะสี</th></tr></thead><tbody>' +
+    p.rows.slice(0, 6).map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td>' + esc(r[2] + r[3] + ' ' + r[4]) + '</td><td>' + esc(r[5]) + '</td></tr>'; }).join('') +
+    '</tbody></table></div>' + (p.rows.length > 6 ? '<p class="lead" style="margin:6px 0 0">… และอีก ' + fmt(p.rows.length - 6) + ' แถว</p>' : '') +
+    (st !== 'SETUP' ? '<p class="note" style="margin-top:12px">เปิดลงคะแนนแล้ว นำเข้ารายชื่อไม่ได้</p>' :
+    '<div class="row" style="margin-top:14px"><button class="btn pri" id="btnImpR">แทนที่รายชื่อทั้งหมด</button><button class="btn" id="btnImpA">เพิ่มต่อท้าย</button></div>');
+  if ($('btnImpR')) {
+    $('btnImpR').onclick = function () { dialog({ title: 'แทนที่รายชื่อทั้งหมด?', text: 'รายชื่อเดิมจะถูกลบและใช้ชุดใหม่ ' + fmt(ok) + ' คน', danger: true, yes: 'แทนที่', onYes: function () { doImport('REPLACE'); } }); };
+    $('btnImpA').onclick = function () { doImport('APPEND'); };
+  }
+}
+function doImport(mode) {
+  api('importRoster', [A.token, A.parsed.rows, mode], function (r) {
+    if (!r.ok) return toast(r.message, true);
+    toast('นำเข้า ' + fmt(r.added) + ' คนแล้ว' + (r.newHouses.length ? ' · คณะสีใหม่: ' + r.newHouses.join(', ') : ''));
+    $('paste').value = ''; $('preview').innerHTML = r.unassigned.length ? '<p class="note" style="margin-top:12px">ระดับชั้นที่ยังไม่มีจุดเลือกตั้ง: ' + esc(r.unassigned.join(', ')) + ' — ไปตั้งที่เมนู จุดและคูหา</p>' : '';
+    load(true); searchRoster();
+  });
+}
+/* ---------- รายชื่อครู ---------- */
+function normHouse(s) { return String(s || '').replace(/\s+/g, '').replace(/^คณะ/, '').replace(/^สี/, ''); }
+function parseTeachers(text) {
+  var tab = text.indexOf('\t') > -1;
+  var lines = text.replace(/\r/g, '').split('\n').map(function (l) { return (tab ? l.split('\t') : csvSplit(l)).map(function (c) { return c.trim(); }); })
+    .filter(function (r) { return r.some(function (c) { return c; }); });
+  if (!lines.length) return { rows: [] };
+  var order = [0, 1, 2, 3, 4], h = lines[0];
+  if (h.some(function (c) { return /รหัส|ชื่อ|สกุล|คณะ|code/i.test(c); }) && !h.some(function (c) { return /\d/.test(c); })) {
+    var find = function (re, not) { for (var i = 0; i < h.length; i++) if (re.test(h[i]) && !(not && not.test(h[i]))) return i; return -1; };
+    var m = [find(/รหัส|code/i), find(/คำนำ/), find(/^ชื่อ|ชื่อ$/, /สกุล/), find(/สกุล/), find(/สี|คณะ/)];
+    if (m[0] > -1 && m[2] > -1) order = m;
+    lines.shift();
+  }
+  return { rows: lines.map(function (r) { return order.map(function (i) { return i > -1 ? (r[i] || '') : ''; }); }) };
+}
+/** ตรวจแถวครูฝั่งหน้าเว็บ (หลังบ้านตรวจซ้ำรวมถึงรหัสซ้ำกับนักเรียน) */
+function teacherIssue(r, houses) {
+  var code = r[0];
+  if (/^\d{13}$/.test(code.replace(/[\s-]/g, ''))) return 'id';
+  if (!code || !r[2] || !/^[A-Za-z0-9\u0E00-\u0E7F._-]{1,20}$/.test(code)) return 'bad';
+  if (!r[4] || !houses[normHouse(r[4])]) return 'house';
+  return '';
+}
+function renderTeacherBox(d) {
+  var t = (d.summary.byType || {}).teacher || { eligible: 0 };
+  $('tCount').textContent = t.eligible ? fmt(t.eligible) + ' คน' : 'ยังไม่มี';
+  $('tCount').classList.toggle('on', !!t.eligible);
+  var ts = d.stations.filter(function (s) { return s.stid === d.settings.teacherStation; })[0] || d.stations[0];
+  $('tStName').textContent = ts ? ts.name : 'ยังไม่มีจุด';
+  $('btnTClear').style.display = t.eligible && d.settings.status === 'SETUP' ? '' : 'none';
+}
+$('tCsv').onchange = function () {
+  var f = this.files[0]; this.value = ''; if (!f) return;
+  var fr = new FileReader();
+  fr.onload = function () { $('tPaste').value = String(fr.result).replace(/^\uFEFF/, ''); checkTeachers(); };
+  fr.readAsText(f, 'utf-8');
+};
+$('btnTCheck').onclick = checkTeachers;
+function checkTeachers() {
+  var p = parseTeachers($('tPaste').value), box = $('tPreview');
+  A.tParsed = p;
+  if (!p.rows.length) { box.innerHTML = '<p class="note" style="margin-top:12px">ยังไม่มีข้อมูล วางตารางรายชื่อครูก่อน</p>'; return; }
+  var houses = {}; (A.data ? A.data.houses : []).forEach(function (h) { houses[normHouse(h.name)] = h; });
+  var seen = {}, n = { ok: 0, dup: 0, bad: 0, house: 0, id: 0 }, byH = {};
+  p.rows.forEach(function (r) {
+    var is = teacherIssue(r, houses);
+    if (is) { n[is]++; return; }
+    var k = r[0].toLowerCase(); if (seen[k]) { n.dup++; return; } seen[k] = 1;
+    n.ok++; var h = houses[normHouse(r[4])]; byH[h.gid] = byH[h.gid] || { h: h, n: 0 }; byH[h.gid].n++;
+  });
+  var st = A.data ? A.data.settings.status : 'SETUP';
+  var cell = function (v, lab) { return '<div class="' + (v ? 'bad' : '') + '"><b class="num">' + v + '</b><small>' + lab + '</small></div>'; };
+  box.innerHTML = '<div class="pv"><div><b class="num">' + fmt(n.ok) + '</b><small>คนที่นำเข้าได้</small></div>' +
+    cell(n.house, 'คณะสีไม่ตรงกับระบบ (ข้าม)') + cell(n.dup, 'รหัสซ้ำในไฟล์ (ข้าม)') + cell(n.bad + n.id, 'รหัส/ชื่อไม่ถูกต้อง (ข้าม)') + '</div>' +
+    (n.id ? '<p class="note" style="margin:0 0 10px">พบเลข 13 หลัก ' + n.id + ' แถว ซึ่งอาจเป็นเลขบัตรประชาชน ระบบจะไม่รับ กรุณาใช้รหัสที่โรงเรียนกำหนดแทน</p>' : '') +
+    '<span class="flab">คณะสี</span><div class="chips" style="margin-bottom:10px">' + Object.keys(byH).map(function (g) { var x = byH[g]; return '<span style="--c:' + esc(x.h.color) + '"><i></i>' + esc(x.h.name) + ' · ' + fmt(x.n) + '</span>'; }).join('') +
+    (A.data && !A.data.houses.length ? '<span>ยังไม่มีคณะสีในระบบ นำเข้ารายชื่อนักเรียนก่อน</span>' : '') + '</div>' +
+    '<div class="tbl"><table><thead><tr><th>รหัสครู</th><th>ชื่อ-สกุล</th><th>คณะสี</th><th></th></tr></thead><tbody>' +
+    p.rows.slice(0, 6).map(function (r) {
+      var is = teacherIssue(r, houses);
+      return '<tr><td class="num">' + esc(r[0]) + '</td><td>' + esc(r[1] + r[2] + ' ' + r[3]) + '</td><td>' + esc(r[4]) + '</td><td>' +
+        (is ? '<b style="color:var(--red)">' + { id: 'เลขบัตรประชาชน?', bad: 'รหัส/ชื่อไม่ถูกต้อง', house: 'ไม่พบคณะสีนี้' }[is] + '</b>' : '') + '</td></tr>';
+    }).join('') + '</tbody></table></div>' + (p.rows.length > 6 ? '<p class="lead" style="margin:6px 0 0">… และอีก ' + fmt(p.rows.length - 6) + ' แถว</p>' : '') +
+    (st !== 'SETUP' ? '<p class="note" style="margin-top:12px">เปิดลงคะแนนแล้ว นำเข้ารายชื่อครูไม่ได้</p>' : !n.ok ? '' :
+    '<div class="row" style="margin-top:14px"><button class="btn pri" id="btnTImpR">แทนที่รายชื่อครูทั้งหมด</button><button class="btn" id="btnTImpA">เพิ่มต่อท้าย</button></div>');
+  if ($('btnTImpR')) {
+    $('btnTImpR').onclick = function () {
+      var had = ((A.data.summary.byType || {}).teacher || {}).eligible || 0;
+      if (!had) return doTeacherImport('REPLACE');
+      dialog({ title: 'แทนที่รายชื่อครู?', text: 'รายชื่อครูเดิม ' + fmt(had) + ' คนจะถูกแทนด้วยชุดใหม่ ' + fmt(n.ok) + ' คน · รายชื่อนักเรียนไม่เปลี่ยน', danger: true, yes: 'แทนที่', onYes: function () { doTeacherImport('REPLACE'); } });
+    };
+    $('btnTImpA').onclick = function () { doTeacherImport('APPEND'); };
+  }
+}
+function doTeacherImport(mode) {
+  api('importTeachers', [A.token, mode === 'CLEAR' ? [] : A.tParsed.rows, mode], function (r) {
+    if (!r.ok) return toast(r.message, true);
+    toast(mode === 'CLEAR' ? 'ลบรายชื่อครูแล้ว' : 'นำเข้าครู ' + fmt(r.added) + ' คนแล้ว · รวม ' + fmt(r.teachers) + ' คน');
+    var skip = [];
+    if (r.dup.length) skip.push('รหัสซ้ำ (กับนักเรียนหรือครูเดิม): ' + r.dup.map(esc).join(', '));
+    if (r.noHouse.length) skip.push('คณะสีไม่ตรง แถวที่ ' + r.noHouse.join(', '));
+    if (r.idLike.length) skip.push('เลข 13 หลัก (ไม่รับ) แถวที่ ' + r.idLike.join(', '));
+    if (r.bad.length) skip.push('รหัส/ชื่อไม่ถูกต้อง แถวที่ ' + r.bad.join(', '));
+    $('tPaste').value = '';
+    $('tPreview').innerHTML = skip.length ? '<div class="note tres"><b>ข้ามบางแถว</b><ul style="margin:6px 0 0;padding-left:18px">' + skip.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>' : '';
+    load(true); searchRoster();
+  });
+}
+$('btnTClear').onclick = function () {
+  var had = ((A.data.summary.byType || {}).teacher || {}).eligible || 0;
+  dialog({ title: 'ลบรายชื่อครูทั้งหมด?', text: 'ลบครู ' + fmt(had) + ' คนออกจากบัญชีรายชื่อ · รายชื่อนักเรียนไม่เปลี่ยน', danger: true, yes: 'ลบรายชื่อครู', onYes: function () { doTeacherImport('CLEAR'); } });
+};
+
+$('btnRq').onclick = searchRoster;
+$('rq').onkeydown = function (e) { if (e.key === 'Enter') searchRoster(); };
+function searchRoster() {
+  if (!A.token) return;
+  api('getRoster', [A.token, $('rq').value, 100], function (r) {
+    var hs = {}; (A.data ? A.data.houses : []).forEach(function (h) { hs[h.gid] = h; });
+    var sts = {}; (A.data ? A.data.stations : []).forEach(function (s) { sts[s.stid] = s.name; });
+    $('rTable').innerHTML = '<thead><tr><th>เลขประจำตัว</th><th>ห้อง</th><th>ชื่อ-สกุล</th><th>คณะสี</th><th>จุด</th><th>สถานะ</th><th></th></tr></thead><tbody>' +
+      (r.rows.length ? r.rows.map(function (x) {
+        var h = hs[x.house];
+        return '<tr><td class="num">' + esc(x.sid) + '</td><td>' + esc(x.classroom) + '</td><td>' + esc(x.name) + '</td><td>' + (h ? '<span class="chips"><span style="--c:' + esc(h.color) + '"><i></i>' + esc(h.name) + '</span></span>' : '-') + '</td>' +
+          '<td>' + esc(sts[x.station] || 'ไม่มีจุด') + '</td><td class="st-' + x.state + '">' + VOTER_NAME[x.state] + (x.stateAt ? ' ' + esc(x.stateAt) : '') + '</td>' +
+          '<td>' + (x.state === 'ISSUED' ? '<button class="btn sm ghost" data-rr="' + esc(x.sid) + '">คืนสิทธิ์</button>' : '') + '</td></tr>';
+      }).join('') : '<tr><td colspan="7">ไม่พบรายชื่อ</td></tr>') + '</tbody>';
+    $('rInfo').textContent = r.total > r.rows.length ? 'แสดง ' + r.rows.length + ' จาก ' + fmt(r.total) + ' คน (พิมพ์ค้นเพื่อกรอง)' : 'ทั้งหมด ' + fmt(r.total) + ' คน';
+  }, true);
+}
+$('rTable').onclick = function (e) {
+  var sid = e.target.getAttribute('data-rr'); if (!sid) return;
+  dialog({ title: 'คืนสิทธิ์ ' + sid + '?', text: 'ยกเลิกบัตรที่ค้างอยู่ในคูหา นักเรียนกลับมาใช้สิทธิ์ใหม่ได้', input: true, required: 'กรุณาระบุเหตุผล', placeholder: 'เหตุผล', yes: 'คืนสิทธิ์', onYes: function (v) {
+    api('restoreRight', [A.token, sid, v], function (r) { if (r.ok) { toast('คืนสิทธิ์แล้ว'); searchRoster(); load(true); } else toast(r.message, true); });
+  } });
+};
+
+/* ================= จุดและคูหา ================= */
+function renderStations(d) {
+  drawStRows(d.stations.map(function (s) { return { stid: s.stid, name: s.name, levels: s.levels }; }));
+  drawTeacherSel(d.settings.teacherStation);
+  var cnt = {}; d.summary.byStation.forEach(function (x) { cnt[x.stid] = x.eligible; });
+  var noSt = d.summary.eligible - d.summary.byStation.reduce(function (a, x) { return a + x.eligible; }, 0);
+  var tch = ((d.summary.byType || {}).teacher || {}).eligible || 0;
+  $('stInfo').innerHTML = d.stations.map(function (s) { return esc(s.name) + ' ' + fmt(cnt[s.stid] || 0) + ' คน'; }).join(' · ') + (tch ? ' (รวมครู ' + fmt(tch) + ' คน)' : '') +
+    (noSt > 0 ? ' · <b style="color:var(--red)">ยังไม่มีจุด ' + fmt(noSt) + ' คน</b>' : '');
+}
+function drawStRows(list) {
+  A.stRows = list;
+  $('stRows').innerHTML = list.map(function (s, i) {
+    return '<div class="sedit" data-i="' + i + '"><label class="f"><span>ชื่อจุด</span><input type="text" data-k="name" maxlength="40" value="' + esc(s.name) + '"></label>' +
+      '<label class="f"><span>ระดับชั้น / ห้อง</span><input type="text" data-k="levels" value="' + esc(s.levels) + '" placeholder="ม.1, ม.2, ม.3"></label>' +
+      '<button type="button" class="btn ghost" data-del="' + i + '" style="color:var(--red)">ลบ</button></div>';
+  }).join('');
+}
+function drawTeacherSel(cur) {
+  var saved = A.stRows.filter(function (s) { return s.stid; });
+  if (!saved.some(function (s) { return s.stid === cur; })) cur = saved[0] ? saved[0].stid : '';
+  $('tStSel').innerHTML = saved.map(function (s) { return '<option value="' + esc(s.stid) + '"' + (s.stid === cur ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') || '<option value="">ยังไม่มีจุด</option>';
+  var t = A.data ? ((A.data.summary.byType || {}).teacher || {}).eligible || 0 : 0;
+  $('tStHint').textContent = (t ? 'ครู ' + fmt(t) + ' คน' : 'ยังไม่มีรายชื่อครู') + ' · วันเลือกตั้งล่วงหน้าครูใช้จุดล่วงหน้าเหมือนนักเรียน · จุดที่เพิ่งเพิ่มเลือกได้หลังกดบันทึก';
+}
+function readStRows() {
+  return A.stRows.map(function (s, i) {
+    var row = document.querySelector('.sedit[data-i="' + i + '"]');
+    return { stid: s.stid, name: row.querySelector('[data-k=name]').value, levels: row.querySelector('[data-k=levels]').value };
+  });
+}
+$('stRows').oninput = function () { A.stDirty = true; };
+$('tStSel').onchange = function () { A.stDirty = true; };
+$('stRows').onclick = function (e) { var i = e.target.getAttribute('data-del'); if (i === null) return; var l = readStRows(); l.splice(+i, 1); A.stDirty = true; drawStRows(l); };
+$('btnAddSt').onclick = function () { var l = readStRows(); l.push({ name: 'จุดที่ ' + (l.length + 1), levels: '' }); A.stDirty = true; drawStRows(l); };
+$('stForm').onsubmit = function (e) {
+  e.preventDefault();
+  api('saveStations', [A.token, readStRows(), $('tStSel').value], function (r) { if (r.ok) { A.stDirty = false; toast('บันทึกจุดเลือกตั้งแล้ว'); load(true); } else toast(r.message, true); });
+};
+function renderBooths(d) {
+  var box = $('bList');
+  if (box.contains(document.activeElement) && document.activeElement.tagName === 'BUTTON' && !$('veil').classList.contains('hide')) return;
+  box.innerHTML = d.stations.map(function (s) {
+    var bs = d.booths.filter(function (b) { return b.stid === s.stid; });
+    return '<div style="margin-top:16px"><div class="row" style="justify-content:space-between"><b style="font-size:16px">' + esc(s.name) + ' <span class="lead" style="font-weight:500">' + esc(s.levels) + '</span></b>' +
+      '<button class="btn sm" data-add="' + s.stid + '">+ เพิ่มคูหา</button></div><div class="bgrid">' +
+      bs.map(function (b) {
+        var state = !b.paired ? '<span class="pill">รอผูกเครื่อง</span>' : b.online ? '<span class="pill" style="background:var(--g1);color:var(--g)">ออนไลน์</span>' : '<span class="pill" style="background:var(--red1);color:var(--red)">ขาดการติดต่อ</span>';
+        return '<div class="bcard"><b>' + esc(b.name) + '</b>' + state +
+          (b.pairCode ? '<div class="code num" title="รหัสผูกเครื่อง">' + esc(b.pairCode) + '</div>' : '') +
+          '<div class="acts"><button class="btn sm ghost" data-code="' + b.bid + '">' + (b.paired ? 'ผูกเครื่องใหม่' : 'ออกรหัสใหม่') + '</button><button class="btn sm ghost" data-rm="' + b.bid + '" style="color:var(--red)">ลบ</button></div></div>';
+      }).join('') + '</div></div>';
+  }).join('');
+}
+$('bList').onclick = function (e) {
+  var add = e.target.getAttribute('data-add'), code = e.target.getAttribute('data-code'), rm = e.target.getAttribute('data-rm');
+  var bn = function (id) { var b = A.data.booths.filter(function (x) { return x.bid === id; })[0]; return b ? b.name : id; };
+  if (add) api('addBooth', [A.token, add], function (r) { if (r.ok) { toast('เพิ่มคูหาแล้ว รหัสผูก ' + r.pairCode); load(true); } else toast(r.message, true); });
+  if (code) dialog({ title: 'ออกรหัสผูกเครื่องใหม่ (' + bn(code) + ')?', text: 'เครื่องที่ผูกไว้เดิมจะใช้เป็นคูหานี้ไม่ได้อีก', danger: true, yes: 'ออกรหัสใหม่', onYes: function () {
+    api('newPairCode', [A.token, code], function (r) { if (r.ok) { toast('รหัสผูกใหม่ ' + r.pairCode); load(true); } else toast(r.message, true); });
+  } });
+  if (rm) dialog({ title: 'ลบ ' + bn(rm) + '?', danger: true, yes: 'ลบคูหา', onYes: function () { api('removeBooth', [A.token, rm], function (r) { if (r.ok) { toast('ลบคูหาแล้ว'); load(true); } else toast(r.message, true); }); } });
+};
+
+/* ================= สถิติผู้มาใช้สิทธิ์ ================= */
+var ROUND_NAME = { ADV: 'วันเลือกตั้งล่วงหน้า', MAIN: 'วันเลือกตั้งจริง' };
+function loadStats(quiet) {
+  api('getTurnoutStats', [A.token], function (r) { if (!r.ok) return; A.stats = r; renderStats(); if (!$('p-rep').classList.contains('hide')) renderReport(); }, quiet !== false);
+}
+setInterval(function () { if (A.token && document.visibilityState === 'visible' && !$('p-sts').classList.contains('hide')) loadStats(); }, 60000);
+function hourLab(h) { return ('0' + h).slice(-2) + '.00'; }
+function renderStats() {
+  var r = A.stats; if (!r) return;
+  var S = r.stats, pk = S.peak;
+  $('stAt').textContent = '· ข้อมูล ณ ' + r.at + ' น.';
+  $('stKpi').innerHTML =
+    '<div><small>ลงคะแนนบนเครื่อง</small><b class="num">' + fmt(S.machine) + '</b> <span>คน' + (S.offline ? ' · รหัสสำรอง ' + fmt(S.offline) : '') + '</span></div>' +
+    '<div><small>บัตรกระดาษสำรอง</small><b class="num">' + fmt(S.paper) + '</b> <span>คน</span></div>' +
+    '<div class="pk"><small>ชั่วโมงที่คนแน่นที่สุด</small><b class="num">' + (pk ? hourLab(pk.h) + '–' + hourLab(pk.h + 1) : '-') + '</b> <span>' + (pk ? fmt(pk.n) + ' คน' + (S.days.length > 1 ? ' · ' + esc(pk.dateText) : '') : 'ยังไม่มีข้อมูล') + '</span></div>' +
+    '<div><small>ห้องที่มาครบทุกคน</small><b class="num">' + fmt(S.full) + '</b> <span>จาก ' + fmt(S.rooms.length) + ' ห้อง</span></div>';
+  $('stDays').innerHTML = S.days.length ? S.days.map(function (d) {
+    var max = Math.max.apply(null, d.hours.map(function (h) { return h.n; }).concat([1]));
+    return '<div class="box" style="margin-top:14px"><div class="dayh"><b>' + (ROUND_NAME[d.round] ? ROUND_NAME[d.round] + ' · ' : '') + esc(d.dateText) + '</b>' +
+      '<small>' + fmt(d.total) + ' คน · คนแรก ' + esc(d.first) + ' น. · คนสุดท้าย ' + esc(d.last) + ' น.</small></div>' +
+      '<div class="hchart">' + d.hours.map(function (h) {
+        return '<div class="c' + (h.n === d.peak.n && h.n ? ' pk' : '') + '" title="' + hourLab(h.h) + '–' + hourLab(h.h + 1) + ' น. · ' + h.n + ' คน"><b class="num">' + (h.n || '') + '</b><i style="height:' + (h.n / max * 100).toFixed(1) + '%"></i></div>';
+      }).join('') + '</div>' +
+      '<div class="hlab">' + d.hours.map(function (h) { return '<span class="num">' + hourLab(h.h) + '</span>'; }).join('') + '</div></div>';
+  }).join('') : '<div class="box" style="margin-top:0"><p class="lead" style="margin:0">ยังไม่มีผู้ลงคะแนนบนเครื่อง กราฟรายชั่วโมงจะแสดงเมื่อเริ่มลงคะแนน</p></div>';
+  var lv = [], seen = {};
+  S.rooms.forEach(function (o) { var k = (o.classroom.match(/^[^/]+/) || [o.classroom])[0]; if (!seen[k]) { seen[k] = 1; lv.push(k); } });
+  lv.sort(function (a, b) { return a.localeCompare(b, 'th', { numeric: true }); });
+  if (A.stFil && lv.indexOf(A.stFil) === -1 && !(A.stFil === 'ครู' && S.teacher)) A.stFil = '';
+  $('stFil').innerHTML = '<button type="button" data-f="" class="' + (!A.stFil ? 'on' : '') + '">ทุกห้อง</button>' +
+    lv.map(function (k) { return '<button type="button" data-f="' + esc(k) + '" class="' + (A.stFil === k ? 'on' : '') + '">' + esc(k) + '</button>'; }).join('');
+  if (S.teacher) $('stFil').innerHTML += '<button type="button" data-f="ครู" class="' + (A.stFil === 'ครู' ? 'on' : '') + '">ครู</button>';
+  var tc = S.teacher, showT = tc && (!A.stFil || A.stFil === 'ครู');
+  var rows = A.stFil === 'ครู' ? [] : S.rooms.filter(function (o) { return !A.stFil || o.classroom.indexOf(A.stFil + '/') === 0 || o.classroom === A.stFil; });
+  var tRow = showT ? '<div class="rrow tch' + (tc.eligible && tc.voted === tc.eligible ? ' full' : '') + '"><span class="rk">–</span><span class="rn">ครู</span><span class="bar"><i style="width:' + Math.min(100, tc.pct) + '%;background:var(--gold)"></i></span><span class="v num">' + fmt(tc.voted) + ' / ' + fmt(tc.eligible) + (tc.paper ? ' (กระดาษ ' + tc.paper + ')' : '') + '</span><span class="p num">' + tc.pct.toFixed(1) + '%</span></div>' : '';
+  $('stRooms').innerHTML = (rows.length || tRow) ? rows.map(function (o) {
+    return '<div class="rrow' + (o.eligible && o.voted === o.eligible ? ' full' : '') + '"><span class="rk num">' + o.rank + '</span><span class="rn">' + esc(o.classroom) + '</span>' +
+      '<span class="bar"><i style="width:' + Math.min(100, o.pct) + '%"></i></span><span class="v num">' + fmt(o.voted) + ' / ' + fmt(o.eligible) + (o.paper ? ' (กระดาษ ' + o.paper + ')' : '') + '</span><span class="p num">' + o.pct.toFixed(1) + '%</span></div>';
+  }).join('') + tRow : '<p class="lead" style="margin:0">ยังไม่มีบัญชีรายชื่อ</p>';
+}
+$('stFil').onclick = function (e) { var b = e.target.closest('[data-f]'); if (!b) return; A.stFil = b.getAttribute('data-f'); renderStats(); };
+
+/* ================= ผู้สมัคร ================= */
+function ballots(d) {
+  return [{ id: 'PRES', name: d.settings.presTitle, color: '#17603a' }].concat(d.houses.map(function (h) { return { id: h.gid, name: 'ประธาน' + h.name, color: h.color }; }));
+}
+function curBallot(d) { var b = ballots(d).filter(function (x) { return x.id === A.tab; })[0]; if (!b) { A.tab = 'PRES'; b = ballots(d)[0]; } return b; }
+function renderCandidates(d) {
+  var b = curBallot(d), setup = d.settings.status === 'SETUP';
+  $('bTabs').innerHTML = ballots(d).map(function (x) {
+    var n = d.candidates.filter(function (c) { return c.ballot === x.id; }).length;
+    return '<button type="button" data-b="' + x.id + '" class="' + (x.id === A.tab ? 'on' : '') + '" style="--c:' + esc(x.color) + ';--on:' + EV.onColor(x.color) + '"><i></i>' + esc(x.name) + ' <small>' + n + '</small></button>';
+  }).join('');
+  var list = d.candidates.filter(function (c) { return c.ballot === b.id; });
+  $('addLab').textContent = 'เพิ่มผู้สมัคร' + b.name;
+  $('btnAddCand').disabled = !setup;
+  $('pNameLab').textContent = b.id === 'PRES' ? 'ชื่อพรรค' : 'ชื่อทีม';
+  $('plist').innerHTML = list.length ? list.map(function (p) {
+    var th = p.photoUrl || p.logoUrl;
+    return '<div class="pitem" style="--c:' + esc(p.color) + '"><div class="no">' + p.no + '</div>' +
+      (th ? '<img class="thumb" src="' + esc(th) + '" alt="">' : '<div class="thumb"></div>') +
+      '<div><div class="nm">' + esc(p.partyName) + '</div><div class="ps">' + esc(p.presidentName) + '</div>' +
+      '<div class="tags"><span class="' + (p.policy.length ? 'ok' : '') + '">นโยบาย ' + p.policy.length + '</span><span class="' + (p.team.length ? 'ok' : '') + '">ทีม ' + p.team.length + '</span><span class="' + (p.video ? 'ok' : '') + '">' + (p.video ? 'มีคลิป' : 'ไม่มีคลิป') + '</span></div></div>' +
+      '<div class="acts"><button class="btn ghost sm" data-edit="' + p.no + '">แก้ไข</button>' +
+      (setup ? '<button class="btn ghost sm" data-del="' + p.no + '" style="color:var(--red)">ลบ</button>' : '') + '</div></div>';
+  }).join('') : '<div class="note">ยังไม่มีผู้สมัคร' + esc(b.name) + '</div>';
+  if (A.editing) { var cur = findCand(A.editing); if (cur) showPreviews(cur); }
+  renderPub(d);
+}
+var PUB_ST = { OFF: 'ยังไม่เผยแพร่', ON: 'เผยแพร่อยู่', QUIET: 'งดแสดงชั่วคราว (เปิดลงคะแนนอยู่)' };
+function candUrl() { return new URL('candidates.html', location.href).href; }
+function renderPub(d) {
+  var st = d.settings, s = !st.candPublic ? 'OFF' : (st.status === 'OPEN' || st.status === 'PAUSED') ? 'QUIET' : 'ON';
+  $('pubSt').className = 'pubst ' + s; $('pubSt').lastChild.textContent = PUB_ST[s];
+  if (document.activeElement !== $('pubChk')) $('pubChk').checked = !!st.candPublic;
+  var u = candUrl();
+  $('pubOpen').href = u; $('pubPoster').href = u + '?poster';
+  if (A.pubQrFor !== u) { A.pubQrFor = u; try { $('pubQr').innerHTML = EV.qrSvg(u, '#0d3b23'); } catch (e) { $('pubQr').innerHTML = ''; } }
+}
+$('pubChk').onchange = function () {
+  var on = this.checked;
+  api('setCandPublic', [A.token, on], function (r) {
+    if (!r.ok) { $('pubChk').checked = !on; return toast(r.message, true); }
+    A.data.settings.candPublic = r.candPublic; renderPub(A.data);
+    toast(on ? (r.page === 'QUIET' ? 'เผยแพร่แล้ว · ตอนนี้งดแสดงเพราะเปิดลงคะแนนอยู่' : 'เผยแพร่หน้าแนะนำผู้สมัครแล้ว') : 'ปิดหน้าแนะนำผู้สมัครแล้ว');
+  });
+};
+$('pubCopy').onclick = function () {
+  var u = candUrl();
+  var done = function () { toast('คัดลอกลิงก์แล้ว'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done, function () { prompt('คัดลอกลิงก์นี้', u); });
+  else prompt('คัดลอกลิงก์นี้', u);
+};
+function findCand(no) { return A.data.candidates.filter(function (c) { return c.ballot === A.tab && c.no === no; })[0]; }
+$('bTabs').onclick = function (e) {
+  var b = e.target.closest('button[data-b]'); if (!b) return;
+  A.tab = b.getAttribute('data-b'); $('pForm').classList.add('hide'); A.editing = null; renderCandidates(A.data);
+};
+$('plist').onclick = function (e) {
+  var ed = e.target.getAttribute('data-edit'), del = e.target.getAttribute('data-del');
+  if (ed) openCand(findCand(+ed));
+  if (del) dialog({ title: 'ลบผู้สมัครเบอร์ ' + del + '?', danger: true, yes: 'ลบ', onYes: function () {
+    api('deleteCandidate', [A.token, A.tab, +del], function (r) { if (r.ok) { toast('ลบแล้ว'); load(true); } else toast(r.message, true); });
+  } });
+};
+$('btnAddCand').onclick = function () {
+  var used = A.data.candidates.filter(function (c) { return c.ballot === A.tab; }).map(function (c) { return c.no; });
+  var n = 1; while (used.indexOf(n) > -1) n++;
+  openCand(null, n);
+};
+function openCand(p, nextNo) {
+  var b = curBallot(A.data);
+  A.editing = p ? p.no : null;
+  $('pfTitle').textContent = (p ? 'แก้ไข' : 'เพิ่ม') + 'ผู้สมัคร' + b.name + (p ? ' เบอร์ ' + p.no : '');
+  $('pNo').value = p ? p.no : nextNo; $('pNo').disabled = !!p;
+  $('pName').value = p ? p.partyName : ''; $('pPres').value = p ? p.presidentName : '';
+  A.color = p ? p.color : (b.id === 'PRES' ? COLORS[(nextNo - 1) % COLORS.length] : b.color);
+  drawSwatches();
+  $('pImgs').classList.toggle('hide', !p); $('pImgHint').classList.toggle('hide', !!p);
+  $('pInfo').classList.toggle('hide', !p);
+  if (p) {
+    showPreviews(p);
+    $('iPolicy').value = p.policy.join('\n');
+    $('iTeam').value = p.team.map(function (t) { return t.name + (t.role ? ' | ' + t.role : ''); }).join('\n');
+    $('iVideo').value = p.video || '';
+    infoCount();
+  }
+  $('pForm').classList.remove('hide');
+  $('pForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function showPreviews(p) {
+  $('prevPhoto').innerHTML = p.photoUrl ? '<img src="' + esc(p.photoUrl) + '" alt="">' : '<div class="empty">ยังไม่มีรูปผู้สมัคร</div>';
+  $('prevLogo').innerHTML = p.logoUrl ? '<img src="' + esc(p.logoUrl) + '" alt="">' : '<div class="empty">ยังไม่มีโลโก้</div>';
+}
+function drawSwatches() {
+  var cs = COLORS.slice(), b = curBallot(A.data);
+  if (cs.indexOf(b.color) === -1) cs.unshift(b.color);
+  $('swatches').innerHTML = cs.map(function (c) {
+    return '<button type="button" data-c="' + c + '" style="background:' + c + '" class="' + (c === A.color ? 'on' : '') + '" aria-label="' + c + '"></button>';
+  }).join('') + '<input type="color" id="pColor" value="' + A.color + '" title="เลือกสีเอง">';
+  $('pColor').oninput = function () { A.color = this.value; [].forEach.call($('swatches').querySelectorAll('button'), function (x) { x.classList.remove('on'); }); };
+}
+$('swatches').onclick = function (e) { var c = e.target.getAttribute('data-c'); if (c) { A.color = c; drawSwatches(); } };
+$('pCancel').onclick = function () { $('pForm').classList.add('hide'); A.editing = null; };
+function lines(v) { return String(v || '').split(/\r?\n/).filter(function (x) { return x.trim(); }).length; }
+function infoCount() {
+  var a = lines($('iPolicy').value), b = lines($('iTeam').value);
+  $('iPolCnt').textContent = a + ' / 5 ข้อ'; $('iPolCnt').classList.toggle('bad', a > 5);
+  $('iTeamCnt').textContent = b + ' / 8 คน'; $('iTeamCnt').classList.toggle('bad', b > 8);
+}
+$('iPolicy').oninput = $('iTeam').oninput = infoCount;
+$('iSave').onclick = function () {
+  if (!A.editing) return;
+  var no = A.editing;
+  api('saveCandidateInfo', [A.token, A.tab, no, { policy: $('iPolicy').value, team: $('iTeam').value, video: $('iVideo').value }], function (r) {
+    if (!r.ok) return toast(r.message, true);
+    A.data.candidates = r.candidates; renderCandidates(A.data);
+    var c = findCand(no); if (c) { $('iPolicy').value = c.policy.join('\n'); $('iVideo').value = c.video; infoCount(); }
+    toast('บันทึกข้อมูลแนะนำแล้ว');
+  });
+};
+$('pForm').onsubmit = function (e) {
+  e.preventDefault();
+  var c = { ballot: A.tab, no: $('pNo').value, partyName: $('pName').value, presidentName: $('pPres').value, color: A.color, isNew: !A.editing };
+  api('saveCandidate', [A.token, c], function (r) {
+    if (!r.ok) return toast(r.message, true);
+    toast(c.isNew ? 'เพิ่มแล้ว อัปโหลดรูปต่อได้เลย' : 'บันทึกแล้ว');
+    A.data.candidates = r.candidates; renderCandidates(A.data);
+    if (c.isNew) openCand(findCand(+c.no));
+  });
+};
+function resizeImage(file, cb) {
+  if (!/^image\//.test(file.type)) return toast('เลือกไฟล์รูปภาพเท่านั้น', true);
+  var fr = new FileReader();
+  fr.onload = function () {
+    var img = new Image();
+    img.onload = function () {
+      var max = 900, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+      var cv = document.createElement('canvas'); cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+      var x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height);
+      cb(cv.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = function () { toast('เปิดไฟล์รูปนี้ไม่ได้', true); };
+    img.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+function bindUpload(id, kind) {
+  $(id).onchange = function () {
+    var f = this.files[0]; this.value = ''; if (!f || !A.editing) return;
+    toast('กำลังอัปโหลด...');
+    resizeImage(f, function (dataUrl) {
+      api('uploadCandidateImage', [A.token, A.tab, A.editing, kind, dataUrl], function (r) {
+        if (!r.ok) return toast(r.message, true);
+        toast('อัปโหลดแล้ว'); A.data.candidates = r.candidates; renderCandidates(A.data);
+      });
+    });
+  };
+}
+bindUpload('filePhoto', 'photo'); bindUpload('fileLogo', 'logo');
+
+function renderHouses(d) {
+  var cnt = {}; d.summary.byHouse.forEach(function (h) { cnt[h.gid] = h.eligible; });
+  $('hRows').innerHTML = d.houses.length ? d.houses.map(function (h) {
+    return '<div class="hedit" data-g="' + h.gid + '"><input type="color" value="' + esc(h.color) + '" aria-label="สี">' +
+      '<input type="text" value="' + esc(h.name) + '" maxlength="40" aria-label="ชื่อคณะสี"><small>' + fmt(cnt[h.gid] || 0) + ' คน</small></div>';
+  }).join('') : '<p class="lead">ยังไม่มีคณะสี (นำเข้าบัญชีรายชื่อที่มีคอลัมน์คณะสีก่อน)</p>';
+}
+$('hRows').oninput = function () { A.hDirty = true; };
+$('hForm').onsubmit = function (e) {
+  e.preventDefault();
+  var list = [].map.call(document.querySelectorAll('.hedit'), function (r) { return { gid: r.getAttribute('data-g'), color: r.querySelector('input[type=color]').value, name: r.querySelector('input[type=text]').value }; });
+  api('saveHouses', [A.token, list], function (r) { if (r.ok) { A.hDirty = false; toast('บันทึกคณะสีแล้ว'); load(true); } else toast(r.message, true); });
+};
+
+/* ================= รายงาน ================= */
+function thaiNow() {
+  var m = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  var d = new Date();
+  return d.getDate() + ' ' + m[d.getMonth()] + ' ' + (d.getFullYear() + 543) + ' เวลา ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' น.';
+}
+function renderReport() {
+  if (!A.data) return;
+  var d = A.data, s = d.summary, st = d.settings;
+  if (!A.comDirty) $('committee').value = st.committee || '';
+  var sel = $('repSel'), want = sel.value || 'ALL';
+  var opts = '<option value="ALL">รายงานทั้งหมด</option>' + (st.seal ? '<option value="ADV">รอบล่วงหน้า (ตราประทับหีบ)</option>' : '') + '<option value="TURN">ผู้มาใช้สิทธิ์</option><option value="STAT">สถิติผู้มาใช้สิทธิ์ (รายชั่วโมง/รายห้อง)</option><option value="PRES">' + esc(st.presTitle) + '</option>' +
+    d.houses.map(function (h) { return '<option value="' + h.gid + '">ประธาน' + esc(h.name) + '</option>'; }).join('');
+  if (sel._o !== opts) { sel.innerHTML = opts; sel._o = opts; sel.value = want; if (!sel.value) sel.value = 'ALL'; }
+  var pages = [];
+  var v = sel.value;
+  if (st.seal && (v === 'ALL' || v === 'ADV')) pages.push(sealPage(d));
+  if (v === 'ALL' || v === 'TURN') pages.push(turnoutPage(d));
+  if (v === 'ALL' || v === 'STAT') pages.push(statsPage(d));
+  if (s.results) {
+    if (v === 'ALL' || v === 'PRES') pages.push(resultPage(d, s.results.president));
+    s.results.houses.forEach(function (h) { if (v === 'ALL' || v === h.gid) pages.push(resultPage(d, h)); });
+  } else if (v !== 'TURN' && v !== 'ADV' && v !== 'STAT') {
+    pages.push('<div class="rpage"><div class="draft">ฉบับร่าง</div><h1>รายงานผลการเลือกตั้ง</h1><p class="sub" style="margin-top:20mm">ผลคะแนนจะแสดงในรายงานได้หลังปิดลงคะแนน</p></div>');
+  }
+  $('report').innerHTML = pages.join('');
+}
+function signs() {
+  var com = (($('committee').value || '').split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean));
+  if (!com.length) com = [' | ประธานกรรมการ', ' | กรรมการ', ' | กรรมการ', ' | กรรมการและเลขานุการ'];
+  return '<div class="signs">' + com.map(function (l) {
+    var p = l.split('|'), name = (p[0] || '').trim(), pos = (p[1] || '').trim();
+    return '<div class="sign"><div class="ln">ลงชื่อ ..................................................</div><div>(' + (name ? esc(name) : '..................................................') + ')</div><div>' + esc(pos || 'กรรมการ') + '</div></div>';
+  }).join('') + '</div>';
+}
+function head(d, title, tag, final) {
+  var st = d.settings;
+  return (st.status !== 'CLOSED' && !final ? '<div class="draft">ฉบับร่าง</div>' : '') +
+    '<h1>' + esc(title) + '</h1>' + (tag ? '<p class="sub" style="margin:4px 0"><span class="gtag">' + esc(tag) + '</span></p>' : '') +
+    '<p class="sub">' + esc(st.electionName) + (st.academicYear ? ' ปีการศึกษา ' + esc(st.academicYear) : '') + '</p>' +
+    '<p class="sub"><b>โรงเรียนเทพศิรินทร์พุแค สระบุรี</b> · ลงคะแนนด้วยเครื่องลงคะแนนอิเล็กทรอนิกส์</p>' +
+    '<div class="meta">' + (final ? '' : st.status === 'CLOSED' ? 'ปิดลงคะแนนเมื่อ ' + esc(st.closedAt) : 'สถานะ: ' + stName(st)) + '</div>';
+}
+function foot() { return '<div class="foot"><span>พิมพ์เมื่อ ' + thaiNow() + '</span><span>ระบบเลือกตั้งบนเครื่อง · ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ</span></div>'; }
+function turnoutPage(d) {
+  var s = d.summary, bt = s.byType;
+  var t = function (rows, label) {
+    return '<table><thead><tr><th>' + label + '</th><th class="r">ผู้มีสิทธิ์</th><th class="r">มาใช้สิทธิ์</th><th class="r">ร้อยละ</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td class="r">' + fmt(r[1]) + '</td><td class="r">' + fmt(r[2]) + '</td><td class="r">' + r[3].toFixed(2) + '</td></tr>'; }).join('') +
+      '<tr class="tot"><td>รวม</td><td class="r">' + fmt(s.eligible) + '</td><td class="r">' + fmt(s.turnout) + '</td><td class="r">' + s.turnoutPct.toFixed(2) + '</td></tr></tbody></table>';
+  };
+  return '<div class="rpage">' + head(d, 'รายงานผู้มาใช้สิทธิ์เลือกตั้ง') +
+    '<h4>1. สรุปผู้มาใช้สิทธิ์</h4><table><tbody>' +
+    '<tr><td>จำนวนผู้มีสิทธิ์เลือกตั้ง</td><td class="r">' + fmt(s.eligible) + '</td><td>คน' + (bt && bt.teacher.eligible ? ' (นักเรียน ' + fmt(bt.student.eligible) + ' · ครู ' + fmt(bt.teacher.eligible) + ')' : '') + '</td></tr>' +
+    '<tr><td>จำนวนผู้มาใช้สิทธิ์</td><td class="r">' + fmt(s.turnout) + '</td><td>คน (ร้อยละ ' + s.turnoutPct.toFixed(2) + ')</td></tr>' +
+    (bt && bt.teacher.eligible ? '<tr><td>ในจำนวนนี้ นักเรียน</td><td class="r">' + fmt(bt.student.turnout) + '</td><td>คน (ร้อยละ ' + bt.student.pct.toFixed(2) + ' ของนักเรียน)</td></tr>' +
+      '<tr><td>ในจำนวนนี้ ครู</td><td class="r">' + fmt(bt.teacher.turnout) + '</td><td>คน (ร้อยละ ' + bt.teacher.pct.toFixed(2) + ' ของครู)</td></tr>' : '') +
+    (d.settings.advDate ? '<tr><td>ในจำนวนนี้ ใช้สิทธิ์วันเลือกตั้งล่วงหน้า (' + thaiD(d.settings.advDate) + ')</td><td class="r">' + fmt((s.byRound || {}).ADV || 0) + '</td><td>คน</td></tr>' +
+      '<tr><td>ในจำนวนนี้ ใช้สิทธิ์วันเลือกตั้งจริง (' + thaiD(d.settings.mainDate) + ')</td><td class="r">' + fmt((s.byRound || {}).MAIN || 0) + '</td><td>คน</td></tr>' : '') +
+    (s.paperVoters ? '<tr><td>ในจำนวนนี้ ใช้บัตรกระดาษสำรอง</td><td class="r">' + fmt(s.paperVoters) + '</td><td>คน</td></tr>' : '') +
+    '<tr><td>ไม่มาใช้สิทธิ์</td><td class="r">' + fmt(s.eligible - s.turnout) + '</td><td>คน</td></tr></tbody></table>' +
+    '<h4>2. แยกตามระดับชั้น' + (bt && bt.teacher.eligible ? ' (และครู)' : '') + '</h4>' + t(s.byLevel.map(function (x) { return [x.level, x.eligible, x.turnout, x.pct]; }), 'ระดับชั้น') +
+    (bt && bt.teacher.eligible ? '<p style="font-size:12px;margin:4px 0 0">ครูได้บัตรประธานนักเรียนและบัตรประธานคณะสีของตน คะแนนนับรวมกับนักเรียน</p>' : '') +
+    '<div class="two"><div><h4>3. แยกตามคณะสี</h4>' + t(s.byHouse.map(function (x) { return [x.name, x.eligible, x.turnout, x.pct]; }), 'คณะสี') + '</div>' +
+    '<div><h4>4. แยกตามจุดเลือกตั้ง</h4>' + t(s.byStation.map(function (x) { return [x.name, x.eligible, x.turnout, x.pct]; }), 'จุด') + '</div></div>' +
+    '<p style="margin:10px 0 0">คณะกรรมการได้ตรวจสอบแล้ว ขอรับรองว่าถูกต้องตามความเป็นจริง</p>' + signs() + foot() + '</div>';
+}
+function statsPage(d) {
+  if (!A.stats) { loadStats(); return '<div class="rpage"><h1>สถิติผู้มาใช้สิทธิ์</h1><p class="sub">กำลังโหลดข้อมูล…</p></div>'; }
+  var S = A.stats.stats;
+  var days = S.days.map(function (dy, i) {
+    var max = Math.max.apply(null, dy.hours.map(function (h) { return h.n; }).concat([1]));
+    return '<h4>' + (i + 1) + '. ผู้มาใช้สิทธิ์รายชั่วโมง ' + (ROUND_NAME[dy.round] ? ROUND_NAME[dy.round] + ' ' : '') + esc(dy.dateText) + '</h4>' +
+      '<table><thead><tr><th>ช่วงเวลา</th><th class="r">จำนวน (คน)</th><th style="width:48%"></th></tr></thead><tbody>' +
+      dy.hours.map(function (h) { return '<tr' + (h.n === dy.peak.n && h.n ? ' style="font-weight:700"' : '') + '><td>' + hourLab(h.h) + '–' + hourLab(h.h + 1) + ' น.</td><td class="r">' + fmt(h.n) + '</td>' +
+        '<td><div style="height:9px;background:#e7f0ea;border-radius:4px"><div style="height:9px;border-radius:4px;background:#17603a;width:' + (h.n / max * 100).toFixed(1) + '%"></div></div></td></tr>'; }).join('') +
+      '<tr class="tot"><td>รวม (คนแรก ' + esc(dy.first) + ' น. · คนสุดท้าย ' + esc(dy.last) + ' น.)</td><td class="r">' + fmt(dy.total) + '</td><td></td></tr></tbody></table>';
+  }).join('');
+  var n = S.days.length + 1, half = Math.ceil(S.rooms.length / 2);
+  var rt = function (list) {
+    return '<table><thead><tr><th class="r">อันดับ</th><th>ห้อง</th><th class="r">มา/มีสิทธิ์</th><th class="r">ร้อยละ</th></tr></thead><tbody>' +
+      list.map(function (o) { return '<tr><td class="r">' + o.rank + '</td><td>' + esc(o.classroom) + '</td><td class="r">' + fmt(o.voted) + '/' + fmt(o.eligible) + '</td><td class="r">' + o.pct.toFixed(2) + '</td></tr>'; }).join('') + '</tbody></table>';
+  };
+  return '<div class="rpage">' + head(d, 'รายงานสถิติผู้มาใช้สิทธิ์') +
+    '<p style="margin:6px 0 0">ลงคะแนนบนเครื่อง ' + fmt(S.machine) + ' คน' + (S.offline ? ' (ใช้รหัสปลดล็อกสำรอง ' + fmt(S.offline) + ' คน)' : '') + (S.paper ? ' · บัตรกระดาษสำรอง ' + fmt(S.paper) + ' คน (ไม่มีเวลาลงคะแนน จึงไม่อยู่ในตารางรายชั่วโมง)' : '') +
+    (S.peak ? ' · ช่วงที่มีผู้มาใช้สิทธิ์มากที่สุด ' + hourLab(S.peak.h) + '–' + hourLab(S.peak.h + 1) + ' น. ' + fmt(S.peak.n) + ' คน' : '') + '</p>' +
+    (days || '<p class="sub">ยังไม่มีข้อมูลรายชั่วโมง</p>') +
+    '<h4>' + n + '. ร้อยละการมาใช้สิทธิ์รายห้อง (เรียงจากมากไปน้อย · มาครบทุกคน ' + fmt(S.full) + ' ห้อง)</h4>' +
+    '<div class="two"><div>' + rt(S.rooms.slice(0, half)) + '</div><div>' + rt(S.rooms.slice(half)) + '</div></div>' +
+    (S.teacher ? '<p style="margin:8px 0 0"><b>ครู</b> มาใช้สิทธิ์ ' + fmt(S.teacher.voted) + ' จาก ' + fmt(S.teacher.eligible) + ' คน (ร้อยละ ' + S.teacher.pct.toFixed(2) + ') · ไม่รวมในการจัดอันดับห้อง</p>' : '') +
+    '<p style="font-size:12px;margin:6px 0 0">หมายเหตุ: สถิตินี้แสดงเฉพาะจำนวนผู้มาใช้สิทธิ์ ไม่มีข้อมูลคะแนนรายห้องหรือรายช่วงเวลา · ข้อมูล ณ ' + esc(A.stats.at) + ' น.</p>' + foot() + '</div>';
+}
+function resultPage(d, b) {
+  var r = b.result || {}, isP = b.ballot === 'PRES';
+  var nm = function (p) { return isP ? 'พรรค' + esc(p.partyName.replace(/^พรรค/, '')) : esc(p.partyName); };
+  var ranked = b.parties.slice().sort(function (x, y) { return y.votes - x.votes || x.no - y.no; });
+  var rankOf = {}, prev = null, rank = 0;
+  ranked.forEach(function (p, i) { if (p.votes !== prev) rank = i + 1; rankOf[p.no] = rank; prev = p.votes; });
+  var byNo = {}; b.parties.forEach(function (p) { byNo[p.no] = p; });
+  var unit = isP ? 'พรรคละ' : 'ทีมละ', role = b.title, verdict;
+  if (r.state === 'WINNER_TIEBREAK' && byNo[r.winnerNo]) {
+    var tw = byNo[r.winnerNo];
+    verdict = 'คะแนนเสมอกันที่อันดับ 1 ระหว่าง ' + r.leaders.map(function (n) { return 'หมายเลข ' + n + ' ' + esc(byNo[n] ? byNo[n].partyName : ''); }).join(' และ ') + ' ' + unit + ' ' + fmt(r.topVotes) +
+      ' คะแนน คณะกรรมการจึงตัดสินโดย<b>' + esc(r.tieBreak.method) + '</b> เมื่อ ' + esc(r.tieBreak.at) + ' ผลคือ ' + nm(tw) + ' หมายเลข ' + tw.no + ' โดย <b>' + esc(tw.presidentName) + '</b> ได้รับเลือกตั้งเป็น' + esc(role);
+  } else if ((r.state === 'WINNER' || r.state === 'WINNER_PLURALITY') && byNo[r.winnerNo]) {
+    var w = byNo[r.winnerNo];
+    verdict = nm(w) + ' หมายเลข ' + w.no + ' โดย <b>' + esc(w.presidentName) + '</b> ได้รับเลือกตั้งเป็น' + esc(role) + ' ด้วยคะแนน <b>' + fmt(w.votes) + '</b> คะแนน คิดเป็นร้อยละ ' + w.pct.toFixed(2) + ' ของบัตรดี ' +
+      (r.majority ? '(เกินกึ่งหนึ่งของผู้มาใช้สิทธิ์ ซึ่งต้องได้อย่างน้อย ' + fmt(r.majorityNeeded) + ' คะแนน)' : '(ได้คะแนนสูงสุด แต่ไม่เกินกึ่งหนึ่งของผู้มาใช้สิทธิ์ ' + fmt(r.majorityNeeded) + ' คะแนน)');
+  } else if (r.state === 'TIE') {
+    verdict = 'คะแนนเสมอกันที่อันดับ 1 ระหว่าง ' + r.leaders.map(function (n) { return 'หมายเลข ' + n + ' ' + esc(byNo[n] ? byNo[n].partyName : ''); }).join(' และ ') + ' ' + unit + ' ' + fmt(r.topVotes) + ' คะแนน ให้คณะกรรมการดำเนินการตามระเบียบต่อไป';
+  } else if (r.state === 'NO_MAJORITY' && b.parties[0]) {
+    verdict = 'หมายเลข ' + b.parties[0].no + ' ' + esc(b.parties[0].partyName) + ' ได้ ' + fmt(b.parties[0].votes) + ' คะแนน ไม่เกินกึ่งหนึ่งของผู้มาใช้สิทธิ์ (' + fmt(r.majorityNeeded) + ' คะแนน) จึงไม่ได้รับเลือกตั้ง';
+  } else verdict = esc(r.label || '-');
+  return '<div class="rpage">' + head(d, 'รายงานผลการเลือกตั้ง' + role, isP ? '' : b.name) +
+    '<h4>1. ข้อมูลผู้ใช้สิทธิ์</h4><table><tbody>' +
+    '<tr><td>ผู้มีสิทธิ์เลือกตั้ง' + (isP ? '' : ' (นักเรียน' + esc(b.name) + ')') + '</td><td class="r">' + fmt(b.eligible) + '</td><td>คน</td></tr>' +
+    '<tr><td>ผู้มาใช้สิทธิ์</td><td class="r">' + fmt(b.turnout) + '</td><td>คน (ร้อยละ ' + b.turnoutPct.toFixed(2) + ')</td></tr>' +
+    '<tr><td>บัตรดี</td><td class="r">' + fmt(b.valid) + '</td><td>ใบ</td></tr>' +
+    (b.invalid ? '<tr><td>บัตรเสีย (บัตรกระดาษสำรอง)</td><td class="r">' + fmt(b.invalid) + '</td><td>ใบ</td></tr>' : '') +
+    '<tr><td>เกณฑ์เกินกึ่งหนึ่งของผู้มาใช้สิทธิ์</td><td class="r">' + fmt(b.majorityNeeded) + '</td><td>คะแนน</td></tr></tbody></table>' +
+    '<h4>2. ผลคะแนน</h4><table><thead><tr><th class="r">อันดับ</th><th class="r">หมายเลข</th><th>' + (isP ? 'พรรค' : 'ทีม') + '</th><th>ผู้สมัคร</th><th class="r">คะแนน</th><th class="r">ร้อยละ*</th></tr></thead><tbody>' +
+    ranked.map(function (p) { return '<tr><td class="r">' + rankOf[p.no] + '</td><td class="r">' + p.no + '</td><td>' + esc(p.partyName) + '</td><td>' + esc(p.presidentName) + '</td><td class="r">' + fmt(p.votes) + '</td><td class="r">' + p.pct.toFixed(2) + '</td></tr>'; }).join('') +
+    '<tr><td></td><td></td><td colspan="2">ไม่ประสงค์ลงคะแนน</td><td class="r">' + fmt(b.voteNo) + '</td><td class="r">' + b.voteNoPct.toFixed(2) + '</td></tr>' +
+    '<tr class="tot"><td></td><td></td><td colspan="2">รวมบัตรดี</td><td class="r">' + fmt(b.valid) + '</td><td class="r">' + (b.valid ? '100.00' : '0.00') + '</td></tr></tbody></table>' +
+    '<div style="font-size:12px;margin-top:3px">* ร้อยละคิดจากจำนวนบัตรดี</div>' +
+    '<h4>3. สรุปผล</h4><div class="verdict">' + verdict + '</div>' +
+    '<p style="margin:10px 0 0">คณะกรรมการได้ตรวจสอบผลการลงคะแนนแล้ว ขอรับรองว่าถูกต้องตามความเป็นจริง</p>' + signs() + foot() + '</div>';
+}
+$('repSel').onchange = renderReport;
+$('committee').oninput = function () { A.comDirty = true; renderReport(); };
+$('btnSaveCom').onclick = function () { api('saveCommittee', [A.token, $('committee').value], function (r) { if (r.ok) { A.comDirty = false; A.data.settings.committee = r.committee; toast('บันทึกรายชื่อกรรมการแล้ว'); } }); };
+$('btnPrint').onclick = function () { renderReport(); try { window.print(); } catch (e) { toast('กด Ctrl+P เพื่อพิมพ์', true); } };
+
+/* ================= ประวัติ ================= */
+$('btnMore').onclick = function () { A.logLimit += 200; loadLog(); };
+$('btnReloadLog').onclick = loadLog;
+function loadLog() {
+  api('getAudit', [A.token, A.logLimit], function (rows) {
+    $('logTable').innerHTML = '<thead><tr><th>เวลา</th><th>โดย</th><th>การดำเนินการ</th><th>รายละเอียด</th></tr></thead><tbody>' +
+      (rows.length ? rows.map(function (r) { return '<tr><td>' + esc(r.time) + '</td><td>' + esc(r.by) + '</td><td>' + esc(r.action) + '</td><td>' + esc(r.detail) + '</td></tr>'; }).join('') : '<tr><td colspan="4">ยังไม่มีประวัติ</td></tr>') + '</tbody>';
+  });
+}
+
+/* ================= ตั้งค่าและรหัส ================= */
+function fillSettings(st) {
+  $('sName').value = st.electionName; $('sYear').value = st.academicYear; $('sPres').value = st.presTitle; $('sTimeout').value = st.boothTimeoutSec;
+  $('sAdv').value = st.advDate || ''; $('sMain').value = st.mainDate || '';
+  $('sAdvSt').innerHTML = (A.data.stations || []).map(function (x) { return '<option value="' + esc(x.stid) + '"' + (x.stid === st.advStation ? ' selected' : '') + '>' + esc(x.name) + ' (' + esc(x.levels) + ')</option>'; }).join('');
+  var setup = st.status === 'SETUP';
+  $('sAdv').disabled = !setup; $('sAdvSt').disabled = !setup;
+  $('sMain').disabled = !(setup || st.status === 'SEALED');
+  $('sDateNote').textContent = setup ? '' : st.status === 'SEALED' ? 'ระหว่างพักหีบ เลื่อนวันเลือกตั้งจริงได้ (เช่น ฝนตก) ส่วนวันล่วงหน้าแก้ไม่ได้แล้ว' : 'เปิดลงคะแนนแล้ว แก้วันเลือกตั้งไม่ได้';
+}
+['sName', 'sYear', 'sPres', 'sTimeout', 'sAdv', 'sMain', 'sAdvSt'].forEach(function (id) { $(id).oninput = $(id).onchange = function () { A.setDirty = true; }; });
+$('setForm').onsubmit = function (e) {
+  e.preventDefault();
+  api('saveSettings', [A.token, { electionName: $('sName').value, academicYear: $('sYear').value, presTitle: $('sPres').value, boothTimeoutSec: $('sTimeout').value,
+    advDate: $('sAdv').value, mainDate: $('sMain').value, advStation: $('sAdvSt').value }], function (r) {
+    if (r.ok) { A.setDirty = false; toast('บันทึกการตั้งค่าแล้ว'); load(true); } else toast(r.message, true);
+  });
+};
+$('fAdmin').onsubmit = function (e) { e.preventDefault(); api('changeSecret', [A.token, 'admin', $('newAdmin').value], function (r) { if (r.ok) { $('newAdmin').value = ''; toast('เปลี่ยนรหัสผู้ดูแลแล้ว'); } else toast(r.message, true); }); };
+$('fPin').onsubmit = function (e) { e.preventDefault(); api('changeSecret', [A.token, 'desk', $('newPin').value], function (r) { if (r.ok) { $('newPin').value = ''; toast('เปลี่ยน PIN เครื่องกรรมการแล้ว'); } else toast(r.message, true); }); };
+$('btnReset').onclick = function () {
+  dialog({ title: 'ล้างการเลือกตั้ง?', text: 'พิมพ์คำว่า ล้างการเลือกตั้ง เพื่อยืนยัน (ระบบสำรองชีตไว้ก่อน)', danger: true, input: true, match: 'ล้างการเลือกตั้ง', yes: 'ล้าง', onYes: function (v) {
+    api('resetElection', [A.token, v], function (r) { if (r.ok) { toast('ล้างแล้ว สำรองไว้ที่ชีต *_backup_' + r.backup); load(true); } else toast(r.message, true); });
+  } });
+};
+
+/* ---------- เก็บถาวรและปีการศึกษาใหม่ ---------- */
+var AR = { data: null };
+var IC_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/></svg>';
+var IC_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>';
+var IC_INFO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.01"/></svg>';
+function loadArchives(quiet) { api('listArchives', [A.token], function (r) { if (!r.ok) return; AR.data = r; renderArchives(); }, quiet); }
+function astate(id, cls, ic, html) { $(id).className = 'astate ' + cls; $(id).innerHTML = ic + '<div>' + html + '</div>'; }
+function renderArchives() {
+  var r = AR.data; if (!r || !A.data) return;
+  var st = A.data.settings, cur = r.current, done = cur && cur.upToDate;
+  r.canArchive = st.status === 'CLOSED' && st.displayMode === 'FINAL';
+  if (done) astate('aState1', 'ok', IC_OK, '<b>เก็บถาวรแล้ว</b> เมื่อ ' + esc(cur.at) + ' · ข้อมูลไม่เปลี่ยนหลังเก็บ');
+  else if (cur && r.canArchive) astate('aState1', 'warn', IC_WARN, '<b>ข้อมูลเปลี่ยนหลังเก็บถาวรครั้งก่อน</b> (' + esc(cur.at) + ') กรุณากดเก็บถาวรอีกครั้ง');
+  else if (r.canArchive) astate('aState1', 'ok', IC_INFO, '<b>พร้อมเก็บถาวร</b> ปิดหีบและประกาศผลอย่างเป็นทางการแล้ว');
+  else astate('aState1', '', IC_INFO, st.status !== 'CLOSED' ? 'ยังเก็บถาวรไม่ได้ ต้องปิดลงคะแนนก่อน (สถานะตอนนี้: ' + esc(stName(st)) + ')' : 'ยังเก็บถาวรไม่ได้ ต้อง<b>ประกาศผลอย่างเป็นทางการ</b>ก่อน (หน้า “นับคะแนนสด” หรือโหมดจอ “ประกาศผล”)');
+  $('btnArchive').disabled = !r.canArchive;
+  $('btnArchive').lastChild.textContent = done ? 'เก็บถาวรอีกครั้ง' : 'เก็บถาวร';
+  $('aOpen').classList.toggle('hide', !cur); if (cur) $('aOpen').href = cur.folderUrl;
+  $('aStep1').classList.toggle('off', !r.canArchive && !cur);
+  if (done) astate('aState2', 'warn', IC_WARN, 'ทำได้แล้ว · <b>ลบข้อมูลปีนี้ทั้งหมดออกจากระบบ ย้อนกลับไม่ได้</b> (ข้อมูลยังอยู่ในโฟลเดอร์เก็บถาวร)');
+  else astate('aState2', '', IC_INFO, 'ทำได้หลังเก็บถาวรขั้นที่ 1 แล้วเท่านั้น');
+  $('btnNewYear').disabled = !done;
+  $('aStep2').classList.toggle('off', !done);
+  $('aList').innerHTML = r.list.length ? r.list.map(function (a) {
+    return '<div class="arow"><div class="ay"><small>ปีการศึกษา</small>' + esc(a.academicYear || '-') + '</div>' +
+      '<div><div class="an">' + esc(a.electionName) + '</div><div class="at">เก็บเมื่อ ' + esc(a.at) + '</div></div>' +
+      '<div class="al"><a class="btn sm" href="' + esc(a.folderUrl) + '" target="_blank" rel="noopener">โฟลเดอร์</a>' +
+      (a.pdfUrl ? '<a class="btn sm" href="' + esc(a.pdfUrl) + '" target="_blank" rel="noopener">รายงาน PDF</a>' : '') +
+      (a.sheetUrl ? '<a class="btn sm" href="' + esc(a.sheetUrl) + '" target="_blank" rel="noopener">สำเนาชีต</a>' : '') + '</div></div>';
+  }).join('') : '<p class="lead" style="margin:0">ยังไม่มีผลที่เก็บถาวร</p>';
+}
+/** รายงานทั้งหมดเป็นไฟล์ HTML สมบูรณ์ (ใช้ทำ PDF ใน Drive · ไม่ใช้ grid/flex เพราะตัวแปลง PDF ของ Google รองรับไม่ครบ) */
+function archiveReportHtml() {
+  var d = A.data, s = d.summary, st = d.settings, pages = [];
+  if (!A.comDirty) $('committee').value = st.committee || '';
+  if (st.seal) pages.push(sealPage(d));
+  pages.push(turnoutPage(d), statsPage(d));
+  if (s.results) { pages.push(resultPage(d, s.results.president)); s.results.houses.forEach(function (h) { pages.push(resultPage(d, h)); }); }
+  var css = '@page{size:A4;margin:12mm 16mm}body{margin:0;font-family:"Sarabun","Noto Sans Thai","Tahoma",sans-serif;font-size:14px;line-height:1.5;color:#000}' +
+    '.rpage{page-break-after:always}.rpage:last-child{page-break-after:auto}h1{font-size:21px;text-align:center;margin:0}' +
+    '.sub{text-align:center;margin:0 0 4px}.meta{text-align:center;font-size:13px;margin-bottom:8px}h4{font-size:15px;margin:12px 0 4px}' +
+    'table{width:100%;border-collapse:collapse;border:1px solid #000}th,td{border:1px solid #000;padding:3px 8px;font-size:13.5px;text-align:left}th{background:#eee}' +
+    '.r{text-align:right}.tot td{font-weight:bold;background:#f5f5f5}.verdict{border:2px solid #000;padding:10px 14px;margin-top:6px}' +
+    '.gtag{display:inline-block;padding:1px 12px;border:1.5px solid #000;border-radius:999px;font-weight:bold}' +
+    '.two>div{display:inline-block;width:49%;vertical-align:top}.two>div+div{margin-left:2%}.two td,.two th{font-size:12.5px;padding:2px 5px}' +
+    '.signs{margin-top:8px;page-break-inside:avoid}.sign{display:inline-block;width:48%;text-align:center;vertical-align:top;margin-bottom:6px}.sign .ln{margin-top:16px}' +
+    '.foot{margin-top:12px;font-size:11px;color:#555;border-top:1px solid #bbb;padding-top:4px}.foot span+span{float:right}.draft{display:none}tr{page-break-inside:avoid}';
+  return '<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>รายงานผลการเลือกตั้ง ' + esc(st.electionName) + ' ปีการศึกษา ' + esc(st.academicYear) + '</title><style>' + css + '</style></head><body>' + pages.join('') + '</body></html>';
+}
+function doArchive() {
+  api('getTurnoutStats', [A.token], function (r) {
+    if (!r.ok) return toast(r.message || 'โหลดสถิติไม่สำเร็จ', true);
+    A.stats = r;
+    api('archiveElection', [A.token, archiveReportHtml()], function (x) {
+      if (!x.ok) return toast(x.message, true);
+      toast('เก็บถาวรแล้ว'); loadArchives(true);
+      dialog({ title: 'เก็บถาวรแล้ว', text: 'บันทึกรายงาน PDF สรุปผล และสำเนาชีตไว้ในโฟลเดอร์ Drive แล้ว\nควรเปิดไฟล์ PDF ตรวจว่าภาษาไทยแสดงถูกต้องก่อนล้างระบบ', yes: 'เปิดโฟลเดอร์', onYes: function () { window.open(x.folderUrl, '_blank', 'noopener'); } });
+    });
+  });
+}
+$('btnArchive').onclick = function () {
+  if (A.comDirty) return toast('กรุณากด “บันทึกรายชื่อ” กรรมการในหน้ารายงานผลก่อน', true);
+  var st = A.data.settings, com = String(st.committee || '').trim();
+  dialog({ title: 'เก็บถาวรผลปีการศึกษา ' + (st.academicYear || '') + '?',
+    text: 'ระบบจะสร้างโฟลเดอร์ใหม่ใน Drive พร้อมรายงานผลทั้งหมด สรุปผล และสำเนาชีต' + (com ? '' : '\n\nยังไม่ได้กรอกรายชื่อกรรมการ รายงานจะมีช่องลงชื่อว่าง'),
+    yes: 'เก็บถาวร', onYes: doArchive });
+};
+$('btnNewYear').onclick = function () {
+  var st = A.data.settings;
+  dialog({ title: 'ล้างระบบสำหรับปีการศึกษาใหม่?', danger: true, input: true, match: 'ล้างระบบสำหรับปีการศึกษาใหม่',
+    text: 'ข้อมูลการเลือกตั้งปีการศึกษา ' + (st.academicYear || '') + ' ทั้งหมดจะถูกลบออกจากระบบ (ยังอยู่ในโฟลเดอร์เก็บถาวร)\nรหัสผู้ดูแลกลับเป็น admin1234 · PIN กรรมการ 1234 · ต้องผูกคูหาใหม่\n\nพิมพ์คำว่า ล้างระบบสำหรับปีการศึกษาใหม่ เพื่อยืนยัน',
+    placeholder: 'ล้างระบบสำหรับปีการศึกษาใหม่', yes: 'ล้างระบบ', onYes: function (v) {
+      api('resetForNewYear', [A.token, v], function (r) {
+        if (!r.ok) { if (r.need === 'ARCHIVE') loadArchives(true); return toast(r.message, true); }
+        dialog({ title: 'ล้างระบบเรียบร้อย', text: r.message + '\n\nกรุณาเข้าสู่ระบบใหม่ แล้วเปลี่ยนรหัสผู้ดูแลและ PIN กรรมการทันที', noCancel: true, yes: 'ไปหน้าเข้าสู่ระบบ',
+          onYes: function () { AR.data = null; A.data = null; A.stats = null; logoutLocal('ล้างระบบแล้ว · รหัสผู้ดูแลเริ่มต้น admin1234'); } });
+      });
+    } });
+};
+
+/* ---------- เริ่มต้น ---------- */
+(function init() {
+  var t = null; try { t = sessionStorage.getItem('ev_admin'); } catch (e) {}
+  if (!t) return;
+  EV.call('checkSession', [t]).then(function (r) { if (r.ok && r.role === 'admin') { A.token = t; enter(); } }, function () {});
+})();
+</script>
+</body>
+</html>

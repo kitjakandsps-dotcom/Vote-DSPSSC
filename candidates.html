@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d3b23">
+<title>ผู้สมัครและนโยบาย · โรงเรียนเทพศิรินทร์พุแค สระบุรี</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d3b23'/%3E%3Cpath d='M9 17l5 5 9-11' stroke='%23f2b705' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!--
+  ระบบเลือกตั้งบนเครื่อง (ประธานนักเรียน + ประธานคณะสี) · โรงเรียนเทพศิรินทร์พุแค สระบุรี
+  ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ
+  candidates.html — หน้าแนะนำผู้สมัคร (สำหรับนักเรียน เปิดจากมือถือได้)
+  - แท็บประธานนักเรียน + แท็บแต่ละคณะสี · เรียงตามหมายเลข
+  - รูป หมายเลข พรรค/ทีม ชื่อผู้สมัคร นโยบาย ทีมงาน คลิป YouTube (กดแล้วค่อยโหลดคลิป)
+  - งดแสดงเองระหว่างเปิดลงคะแนน · ผู้ดูแลกดเผยแพร่ในหน้าผู้ดูแล
+  - candidates.html?poster = ป้าย QR ขนาด A4 สำหรับพิมพ์ติดบอร์ด
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="app.js"></script>
+<style>
+  :root{
+    --bg:#f4f3ee; --surface:#fff; --ink:#14201a; --muted:#5f6b64; --line:#e3e5de; --soft:#eef0ea;
+    --g:#17603a; --g9:#0d3b23; --g1:#e7f0ea; --gold:#f2b705; --gold1:#fff5d2; --gold9:#6b5000;
+    --red:#c0352b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Anuphan",system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums}
+  .hide{display:none!important}
+  button{font-family:inherit;cursor:pointer;color:inherit}
+  svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+  /* หัวหน้า */
+  .top{background:var(--g9);color:#fff;position:relative;overflow:hidden}
+  .top::after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;border:70px solid rgba(242,183,5,.08);right:-170px;top:-190px;pointer-events:none}
+  .top .in{width:min(1120px,100%);margin:0 auto;padding:30px 22px 26px;position:relative;z-index:1}
+  .sch{font-size:14px;color:#a9c0b2;display:flex;align-items:center;gap:8px}
+  .sch i{width:8px;height:8px;border-radius:2px;background:var(--gold);display:inline-block}
+  .top h1{margin:6px 0 4px;font-size:clamp(25px,4.4vw,40px);line-height:1.15;letter-spacing:-.01em}
+  .top p{margin:0;color:#cfe0d5;font-size:16px}
+  .dates{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .dates span{display:inline-flex;flex-direction:column;background:rgba(255,255,255,.07);border-radius:12px;padding:7px 13px 8px;line-height:1.25}
+  .dates small{font-size:12.5px;color:#a9c0b2;font-weight:600}
+  .dates b{font-size:15.5px}
+
+  /* แท็บ */
+  .tabs{position:sticky;top:0;z-index:5;background:rgba(244,243,238,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .tabs .in{width:min(1120px,100%);margin:0 auto;padding:10px 22px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .tabs .in::-webkit-scrollbar{display:none}
+  .tab{flex-shrink:0;height:40px;border-radius:999px;border:1px solid var(--line);background:#fff;padding:0 16px;font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .tab i{width:11px;height:11px;border-radius:50%;background:var(--c)}
+  .tab.on{background:var(--g9);border-color:var(--g9);color:#fff}
+  .tab.on i{box-shadow:0 0 0 2px #fff}
+
+  main{width:min(1120px,100%);margin:0 auto;padding:22px 22px 10px}
+  .sec{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:4px 0 16px}
+  .sec h2{margin:0;font-size:clamp(22px,3vw,28px);line-height:1.2}
+  .sec .sw{width:14px;height:14px;border-radius:4px;background:var(--c);display:inline-block;margin-right:9px;vertical-align:1px}
+  .sec small{color:var(--muted);font-size:14.5px;padding-bottom:3px}
+  .who{background:var(--gold1);color:var(--gold9);border-radius:12px;padding:9px 14px;font-size:14.5px;margin:-4px 0 18px;font-weight:500}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px;align-items:start}
+  .card{background:#fff;border-radius:22px;overflow:hidden;border:1px solid var(--line);position:relative}
+  .card::before{content:"";display:block;height:7px;background:var(--c)}
+  .hd{display:grid;grid-template-columns:124px minmax(0,1fr);gap:16px;padding:18px 18px 4px}
+  .ph{width:124px;aspect-ratio:4/5;border-radius:16px;background:var(--c) center/cover no-repeat;position:relative;display:grid;place-items:center;color:var(--on);font-size:44px;font-weight:700}
+  .ph .no{position:absolute;left:-6px;bottom:-8px;min-width:46px;height:46px;padding:0 6px;border-radius:14px;background:#fff;color:var(--ink);display:grid;place-items:center;font-size:24px;font-weight:700;box-shadow:0 4px 14px rgba(20,32,26,.18)}
+  .id{min-width:0;padding-top:2px}
+  .id small{display:block;color:var(--muted);font-size:13px;font-weight:600;letter-spacing:.02em}
+  .id .pt{display:flex;align-items:center;gap:9px;margin-top:2px}
+  .id .pt img{width:34px;height:34px;border-radius:9px;object-fit:cover;background:var(--soft);flex-shrink:0}
+  .id .pt b{font-size:19px;line-height:1.25}
+  .id .nm{margin-top:10px;font-size:15px;color:var(--muted)}
+  .id .nm b{display:block;color:var(--ink);font-size:17px;line-height:1.3}
+  .bd{padding:14px 18px 18px}
+  .lab{font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin:14px 0 6px}
+  .lab:first-child{margin-top:4px}
+  ol.pol{list-style:none;margin:0;padding:0;counter-reset:p}
+  ol.pol li{counter-increment:p;display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;padding:7px 0;border-top:1px dashed var(--line);font-size:15.5px;line-height:1.5}
+  ol.pol li:first-child{border-top:0}
+  ol.pol li::before{content:counter(p);width:26px;height:26px;border-radius:8px;background:var(--cl);color:var(--cd);display:grid;place-items:center;font-weight:700;font-size:14px;margin-top:1px}
+  .team{display:flex;flex-wrap:wrap;gap:6px}
+  .team span{background:var(--soft);border-radius:10px;padding:5px 10px;font-size:14px;line-height:1.3}
+  .team span em{display:block;font-style:normal;color:var(--muted);font-size:12px}
+  .vid{margin-top:16px;border-radius:14px;overflow:hidden;aspect-ratio:16/9;background:#000 center/cover no-repeat;position:relative;border:0;width:100%;padding:0;display:block}
+  .vid .pl{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.35))}
+  .vid .pl span{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+  .vid .pl svg{width:26px;height:26px;fill:var(--g9);stroke:none;margin-left:4px}
+  .vid .cap{position:absolute;left:12px;bottom:10px;color:#fff;font-weight:600;font-size:14px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .empty{color:var(--muted);font-size:14.5px;padding:6px 0}
+
+  /* สถานะ */
+  .msg{min-height:58vh;display:grid;place-items:center;text-align:center;padding:30px 22px}
+  .msg .ic{width:72px;height:72px;border-radius:22px;background:var(--g1);display:grid;place-items:center;margin:0 auto 16px}
+  .msg .ic svg{width:36px;height:36px;stroke:var(--g)}
+  .msg b{display:block;font-size:22px;line-height:1.3}
+  .msg p{color:var(--muted);margin:8px auto 0;max-width:30em}
+  .msg .btn{margin-top:18px;height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:0 18px;font-weight:600;font-size:15px}
+  .sk{background:#fff;border-radius:22px;height:340px;border:1px solid var(--line);position:relative;overflow:hidden}
+  .sk::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,0,0,.035),transparent);animation:sh 1.3s infinite}
+  @keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+
+  footer{width:min(1120px,100%);margin:0 auto;padding:26px 22px 34px;color:var(--muted);font-size:13.5px;display:flex;gap:10px 18px;flex-wrap:wrap;justify-content:space-between}
+  footer a{color:var(--g);font-weight:600}
+
+  /* ป้าย QR สำหรับพิมพ์ */
+  .poster{display:none}
+  body.pst{background:#fff}
+  body.pst .top,body.pst .tabs,body.pst main,body.pst footer{display:none}
+  body.pst .poster{display:flex;flex-direction:column;align-items:center;text-align:center;width:min(800px,100%);margin:0 auto;padding:36px 28px}
+  .poster .band{width:100%;background:var(--g9);color:#fff;border-radius:22px;padding:26px 22px 24px}
+  .poster .band small{color:var(--gold);font-weight:700;font-size:16px}
+  .poster .band h1{margin:6px 0 0;font-size:34px;line-height:1.2}
+  .poster h2{font-size:38px;margin:30px 0 4px;line-height:1.2}
+  .poster p{margin:0;color:var(--muted);font-size:19px}
+  .poster .qr{width:min(360px,80vw);margin:24px auto 10px;border:3px solid var(--g9);border-radius:22px;padding:12px;background:#fff}
+  .poster .qr svg{display:block;width:100%;height:auto}
+  .poster .url{font-size:15px;color:var(--muted);word-break:break-all;max-width:34em}
+  .poster .when{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+  .poster .when span{border:2px solid var(--line);border-radius:14px;padding:8px 16px;font-size:16px;line-height:1.3}
+  .poster .when b{display:block;font-size:19px}
+  .poster .dev{margin-top:26px;font-size:14px;color:var(--muted)}
+  .poster .act{margin-top:20px;display:flex;gap:10px}
+  .poster .act button{height:46px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:0 20px;font-weight:600;font-size:15.5px}
+  .poster .act button.pri{background:var(--g);border-color:var(--g);color:#fff}
+  @media print{
+    @page{size:A4;margin:12mm}
+    .poster .act{display:none}
+    body.pst .poster{padding:0}
+    .poster .band{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+
+  @media (max-width:560px){
+    .top .in{padding:24px 16px 20px}
+    .tabs .in,main{padding-left:16px;padding-right:16px}
+    .grid{grid-template-columns:1fr;gap:14px}
+    .hd{grid-template-columns:104px minmax(0,1fr);gap:14px;padding:16px 16px 2px}
+    .ph{width:104px;font-size:38px}
+    .ph .no{min-width:40px;height:40px;font-size:21px}
+    .bd{padding:12px 16px 16px}
+    .id .pt b{font-size:18px}
+  }
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <div class="sch"><i></i><span>โรงเรียนเทพศิรินทร์พุแค สระบุรี</span><span id="ay"></span></div>
+  <h1 id="eName">ผู้สมัครและนโยบาย</h1>
+  <p>ทำความรู้จักผู้สมัครก่อนเข้าคูหา · เรียงตามหมายเลข</p>
+  <div class="dates" id="dates"></div>
+</div></header>
+<nav class="tabs hide" id="tabs" aria-label="เลือกบัตร"><div class="in" id="tabIn"></div></nav>
+<main id="main"><div class="grid"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></main>
+<footer><span>ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ · โรงเรียนเทพศิรินทร์พุแค สระบุรี</span><a href="?poster" id="pLink">พิมพ์ป้าย QR หน้านี้</a></footer>
+
+<div class="poster" id="poster">
+  <div class="band"><small>โรงเรียนเทพศิรินทร์พุแค สระบุรี</small><h1 id="pName">เลือกตั้งประธานนักเรียนและประธานคณะสี</h1></div>
+  <h2>สแกนดูผู้สมัครและนโยบาย</h2>
+  <p>ประธานนักเรียน และประธานคณะสีทุกสี</p>
+  <div class="qr" id="pQr"></div>
+  <div class="url num" id="pUrl"></div>
+  <div class="when" id="pWhen"></div>
+  <div class="dev">ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ</div>
+  <div class="act"><button type="button" class="pri" onclick="window.print()">พิมพ์ป้าย</button><button type="button" onclick="location.href=location.pathname">กลับหน้าผู้สมัคร</button></div>
+</div>
+
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var esc = EV.esc;
+var D = null, CUR = 'pres';
+var IC_WAIT = '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+var IC_LOCK = '<svg class="i" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>';
+var IC_OFF = '<svg class="i" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg>';
+var PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
+
+function pageUrl() { return location.origin + location.pathname; }
+function hexA(hex, a) {
+  var m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return 'rgba(23,96,58,' + a + ')';
+  var n = parseInt(m[1], 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+function ini(c) { return esc(String(c.presidentName || c.partyName || '').replace(/^(นาย|นางสาว|นาง|ด\.ช\.|ด\.ญ\.|เด็กชาย|เด็กหญิง)\s*/, '').charAt(0) || c.no); }
+
+function datesHtml(d) {
+  var s = d.schedule || {}, out = [];
+  if (s.advDate) out.push('<span><small>เลือกตั้งล่วงหน้า · ' + esc(s.advStationName || '') + '</small><b>' + esc(s.advDateText) + '</b></span>');
+  if (s.mainDate) out.push('<span><small>' + (s.advDate ? 'เลือกตั้งจริง' : 'วันเลือกตั้ง') + '</small><b>' + esc(s.mainDateText) + '</b></span>');
+  return out.join('');
+}
+
+function card(c) {
+  var col = c.color || '#17603a';
+  var style = '--c:' + esc(col) + ';--on:' + EV.onColor(col) + ';--cl:' + hexA(col, .13) + ';--cd:' + (EV.onColor(col) === '#fff' ? esc(col) : '#14201a');
+  var hasPol = c.policy && c.policy.length, hasTeam = c.team && c.team.length;
+  var party = c.partyName && c.partyName !== c.presidentName;
+  return '<article class="card" style="' + style + '">' +
+    '<div class="hd"><div class="ph"' + (c.photoUrl ? ' style="background-image:url(\'' + esc(c.photoUrl) + '\')"' : '') + '>' + (c.photoUrl ? '' : ini(c)) +
+      '<span class="no num" aria-label="หมายเลข ' + c.no + '">' + c.no + '</span></div>' +
+    '<div class="id"><small>หมายเลข ' + c.no + '</small>' +
+      (party ? '<div class="pt">' + (c.logoUrl ? '<img src="' + esc(c.logoUrl) + '" alt="" loading="lazy">' : '') + '<b>' + esc(c.partyName) + '</b></div>' : '') +
+      '<div class="nm">' + (party ? 'ผู้สมัคร' : '') + '<b>' + esc(c.presidentName || c.partyName) + '</b></div></div></div>' +
+    '<div class="bd">' +
+      (hasPol ? '<div class="lab">นโยบาย</div><ol class="pol">' + c.policy.map(function (p) { return '<li><span>' + esc(p) + '</span></li>'; }).join('') + '</ol>' : '') +
+      (hasTeam ? '<div class="lab">ทีมงาน</div><div class="team">' + c.team.map(function (t) { return '<span>' + esc(t.name) + (t.role ? '<em>' + esc(t.role) + '</em>' : '') + '</span>'; }).join('') + '</div>' : '') +
+      (c.videoId ? '<button type="button" class="vid" data-v="' + esc(c.videoId) + '" style="background-image:url(\'https://i.ytimg.com/vi/' + esc(c.videoId) + '/hqdefault.jpg\')" aria-label="เล่นคลิปแนะนำตัว หมายเลข ' + c.no + '">' +
+        '<span class="pl"><span>' + PLAY + '</span></span><span class="cap">คลิปแนะนำตัว</span></button>' : '') +
+      (!hasPol && !hasTeam && !c.videoId ? '<div class="empty">ยังไม่มีข้อมูลนโยบาย</div>' : '') +
+    '</div></article>';
+}
+
+function render() {
+  var d = D;
+  if (d.electionName) { $('eName').textContent = d.electionName; $('pName').textContent = d.electionName; document.title = 'ผู้สมัครและนโยบาย · ' + d.electionName; }
+  $('ay').textContent = d.academicYear ? '· ปีการศึกษา ' + d.academicYear : '';
+  $('dates').innerHTML = datesHtml(d);
+  if (d.state !== 'ON') {
+    $('tabs').classList.add('hide');
+    var quiet = d.state === 'QUIET';
+    $('main').innerHTML = '<div class="msg"><div><div class="ic">' + (quiet ? IC_LOCK : IC_OFF) + '</div><b>' + (quiet ? 'งดแสดงข้อมูลผู้สมัครชั่วคราว' : 'ยังไม่เผยแพร่ข้อมูลผู้สมัคร') + '</b>' +
+      '<p>' + esc(quiet ? d.message : 'คณะกรรมการการเลือกตั้งจะเผยแพร่เร็ว ๆ นี้ ลองเปิดหน้านี้อีกครั้งภายหลัง') + '</p>' +
+      (quiet ? '<p>ไปใช้สิทธิ์ได้ที่จุดเลือกตั้งตามระดับชั้นของตนเอง</p>' : '') + '</div></div>';
+    return;
+  }
+  var tabs = [{ k: 'pres', name: 'ประธานนักเรียน', color: '#0d3b23' }].concat((d.houses || []).map(function (h) { return { k: h.gid, name: h.name, color: h.color }; }));
+  if (!tabs.some(function (t) { return t.k === CUR; })) CUR = 'pres';
+  $('tabs').classList.toggle('hide', tabs.length < 2);
+  $('tabIn').innerHTML = tabs.map(function (t) { return '<button type="button" class="tab' + (t.k === CUR ? ' on' : '') + '" data-k="' + esc(t.k) + '" style="--c:' + esc(t.color) + '"><i></i>' + esc(t.name) + '</button>'; }).join('');
+  var list, head;
+  if (CUR === 'pres') {
+    list = d.president || [];
+    head = '<div class="sec"><h2>' + esc(d.presTitle || 'ประธานนักเรียน') + '</h2><small>' + list.length + ' พรรค · นักเรียนทุกคนลงคะแนนบัตรนี้</small></div>';
+  } else {
+    var h = d.houses.filter(function (x) { return x.gid === CUR; })[0];
+    list = h.candidates;
+    head = '<div class="sec"><h2><span class="sw" style="--c:' + esc(h.color) + '"></span>ประธาน' + esc(h.name) + '</h2><small>' + list.length + ' ผู้สมัคร</small></div>' +
+      '<div class="who">เฉพาะนักเรียน' + esc(h.name) + 'ที่ลงคะแนนบัตรนี้</div>';
+  }
+  $('main').innerHTML = head + (list.length ? '<div class="grid">' + list.map(card).join('') + '</div>' : '<div class="empty">ยังไม่มีผู้สมัคร</div>');
+}
+
+$('tabIn').onclick = function (e) {
+  var b = e.target.closest('[data-k]'); if (!b) return;
+  CUR = b.getAttribute('data-k');
+  history.replaceState(null, '', '#' + CUR);
+  render();
+  var t = $('tabs').getBoundingClientRect().top + window.scrollY;
+  if (window.scrollY > t) window.scrollTo({ top: t, behavior: 'smooth' });
+  var on = $('tabIn').querySelector('.on'); if (on && on.scrollIntoView) on.scrollIntoView({ inline: 'center', block: 'nearest' });
+};
+$('main').onclick = function (e) {
+  var v = e.target.closest('.vid[data-v]'); if (!v || v.querySelector('iframe')) return;
+  v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(v.getAttribute('data-v')) + '?autoplay=1&rel=0&playsinline=1" title="คลิปแนะนำตัว" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+  v.style.cursor = 'default';
+};
+
+function load() {
+  if (!EV.ready) { $('main').innerHTML = '<div class="msg"><div><div class="ic">' + IC_OFF + '</div><b>ยังไม่ได้ตั้งค่าลิงก์หลังบ้าน</b><p>แก้บรรทัด EXEC_URL ในไฟล์ app.js</p></div></div>'; return; }
+  EV.call('getCandidatesPage', []).then(function (d) { D = d; D.at = Date.now(); render(); }, function () {
+    if (D) return;
+    $('main').innerHTML = '<div class="msg"><div><div class="ic">' + IC_WAIT + '</div><b>โหลดข้อมูลไม่สำเร็จ</b><p>ตรวจสอบอินเทอร์เน็ต แล้วลองอีกครั้ง</p><button type="button" class="btn" onclick="load()">ลองอีกครั้ง</button></div></div>';
+  });
+}
+// กลับมาที่หน้าหลังจากออกไปนาน (เช่น สลับแอป) → โหลดใหม่ เผื่อสถานะเปลี่ยน
+document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && D && Date.now() - D.at > 180000) load(); });
+
+/* ---------- ป้าย QR ---------- */
+function poster() {
+  document.body.classList.add('pst');
+  var url = pageUrl();
+  $('pQr').innerHTML = EV.qrSvg(url, '#0d3b23');
+  $('pUrl').textContent = url;
+  if (EV.ready) EV.call('getCandidatesPage', []).then(function (d) {
+    if (d.electionName) $('pName').textContent = d.electionName;
+    $('pWhen').innerHTML = datesHtml(d);
+  }, function () {});
+}
+
+if (/[?&]poster/.test(location.search)) poster();
+else {
+  var h = (location.hash || '').slice(1); if (h) CUR = decodeURIComponent(h);
+  load();
+}
+</script>
+</body>
+</html>

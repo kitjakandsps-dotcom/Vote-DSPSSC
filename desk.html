@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เครื่องกรรมการ · เลือกตั้งบนเครื่อง</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d3b23'/%3E%3Cpath d='M9 17l5 5 9-11' stroke='%23f2b705' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!--
+  ระบบเลือกตั้งบนเครื่อง (ประธานนักเรียน + ประธานคณะสี) · โรงเรียนเทพศิรินทร์พุแค สระบุรี
+  ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ
+  ส่วนที่ 3 : เครื่องกรรมการ (desk.html) — ตรวจตัวตนนักเรียน แล้วปลดล็อกคูหา
+  คีย์ลัด: พิมพ์เลขประจำตัว → Enter = ค้น → Enter อีกครั้ง = ปลดล็อกคูหาที่ระบบเลือกให้ · Esc = ล้าง
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f3ee; --surface:#fff; --ink:#14201a; --muted:#5f6b64; --line:#e3e5de; --soft:#eef0ea;
+    --g:#17603a; --g9:#0d3b23; --g1:#e7f0ea; --gold:#f2b705; --gold1:#fff5d2; --gold9:#6b5000;
+    --red:#c0352b; --red1:#fdecea;
+    --r:18px; --sh:0 1px 2px rgba(20,32,26,.05),0 6px 18px rgba(20,32,26,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Anuphan",system-ui,sans-serif;font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .hide{display:none!important}
+  button,input,select,textarea{font-family:inherit;font-size:15.5px;color:inherit}
+  button{cursor:pointer}
+  a{color:var(--g)}
+  svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+  /* ---------- ปุ่มและฟอร์ม ---------- */
+  .btn{height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .12s,transform .06s;text-decoration:none;color:var(--ink)}
+  .btn:hover{background:var(--soft)}
+  .btn:active{transform:translateY(1px)}
+  .btn.pri{background:var(--g);border-color:var(--g);color:#fff}.btn.pri:hover{background:var(--g9)}
+  .btn.yel{background:var(--gold);border-color:var(--gold);color:var(--g9)}
+  .btn.red{background:var(--red);border-color:var(--red);color:#fff}
+  .btn.ghost{background:var(--surface)}
+  .btn.sm{height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+  label.f{display:block;margin-bottom:14px}
+  label.f span,.flab{display:block;font-size:13.5px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  input[type=text],input[type=password],input[type=number],textarea{width:100%;height:46px;border:1px solid var(--line);background:#fcfcfa;border-radius:12px;padding:0 14px;transition:border-color .12s,box-shadow .12s}
+  textarea{height:96px;padding:10px 14px;resize:vertical}
+  input:focus,textarea:focus{outline:0;border-color:var(--g);box-shadow:0 0 0 4px rgba(23,96,58,.12);background:#fff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  .pill,.stat{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;background:var(--soft);color:var(--muted)}
+    .stat.CLOSED{background:var(--g1);color:var(--g)}
+  .stat.PAUSED{background:var(--red1);color:var(--red)}
+
+  /* ---------- เข้าสู่ระบบ ---------- */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--g9);padding:20px;position:relative;overflow:hidden}
+  #login::before{content:"";position:absolute;width:440px;height:440px;border-radius:50%;border:64px solid rgba(242,183,5,.09);left:-180px;bottom:-200px}
+  .lwrap{width:100%;max-width:380px;position:relative}
+  .lbox{background:var(--surface);border-radius:26px;padding:28px 24px 22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .seal{width:50px;height:50px;border-radius:14px;background:var(--gold);color:var(--g9);display:grid;place-items:center;margin-bottom:16px}
+  .seal svg{width:26px;height:26px}
+  .lbox h1{margin:0;font-size:24px;font-weight:700}
+  .lbox p{margin:2px 0 20px;color:var(--muted);font-size:14px}
+  .err{color:var(--red);font-size:14px;min-height:20px;margin-top:8px}
+  .lfoot{text-align:center;color:#8fa898;font-size:12px;margin-top:16px}
+
+  /* ---------- โครงหน้า ---------- */
+  .layout{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+  nav.side{background:var(--g9);color:#dfe9e2;padding:22px 14px;display:flex;flex-direction:column;gap:3px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;gap:11px;align-items:center;padding:0 8px 22px}
+  .brand .seal{width:40px;height:40px;border-radius:12px;margin:0}
+  .brand .seal svg{width:22px;height:22px}
+  .brand b{font-size:15px;line-height:1.2;display:block}
+  .brand small{display:block;font-size:11.5px;color:#9fb3a7;font-weight:500;line-height:1.3;margin-top:2px}
+  nav.side button[data-p]{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:none;border:0;padding:11px 12px;border-radius:12px;font-size:14.5px;color:#cfe0d5;transition:background .12s}
+  nav.side button[data-p]:hover{background:rgba(255,255,255,.06)}
+  nav.side button[data-p].on{background:rgba(255,255,255,.12);color:#fff;font-weight:600}
+  nav.side button[data-p].on svg{color:var(--gold)}
+  nav.side .credit{margin-top:auto;font-size:11.5px;color:#7f9688;padding:0 10px;line-height:1.5}
+  .main{padding:20px 28px 40px;min-width:0;max-width:1240px;width:100%}
+  .topbar{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .topbar .ttl{flex:1;min-width:0;font-size:13.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ibtn{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex-shrink:0}
+  .ibtn:hover{background:var(--soft)}
+  h2{font-size:27px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .lead{color:var(--muted);margin:2px 0 18px;font-size:14px}
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;margin-bottom:14px;min-width:0}
+  .box h3{margin:0 0 12px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .box h3 svg{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+  /* ---------- ควบคุมการนับ (Bento) ---------- */
+  .bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+  .bento > *{margin:0}
+  .c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px}
+  .kpi > span{display:block;font-size:13px;color:var(--muted);font-weight:600}
+  .kpi b{display:block;font-size:34px;line-height:1.15;margin-top:4px;font-weight:700}
+  .kpi small{display:block;color:var(--muted);font-size:13px}
+  .kpi.hero{background:var(--g);border-color:var(--g);color:#fff}
+  .kpi.hero > span,.kpi.hero small{color:#cfe0d5}
+  .kpi.hero .mt{height:6px;border-radius:999px;background:rgba(255,255,255,.2);margin-top:10px;overflow:hidden}
+  .kpi.hero .mt i{display:block;height:100%;width:0;background:var(--gold);border-radius:999px;transition:width .4s}
+  .recon{padding:11px 14px;margin-top:12px;font-weight:600;border-radius:12px;font-size:14px}
+  .recon:empty{display:none}
+  .ctr{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13.5px;color:var(--muted)}
+  .ctr:empty{display:none}
+  .ctr i{width:9px;height:9px;border-radius:50%;background:#9aa39d;flex-shrink:0}
+  .ctr.on i{background:#2fa463}.ctr.wait i{background:var(--gold)}.ctr.off i{background:var(--red)}
+  .ctr.wait b{color:var(--gold9)}.ctr.off b{color:var(--red)}
+  .recon.ok{background:var(--g1);color:var(--g)}
+  .recon.short{background:var(--gold1);color:var(--gold9)}
+  .recon.over{background:var(--red1);color:var(--red)}
+  .seg{display:flex;background:var(--soft);border-radius:13px;padding:4px;gap:4px}
+  .seg button{flex:1;height:40px;padding:0 12px;border:0;border-radius:10px;background:transparent;font-weight:600;color:var(--muted);white-space:nowrap}
+  .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--sh)}
+  .res{background:var(--gold1);border-color:#f3e2a6}
+  .res #resultLine{margin:0;background:transparent;padding:0;font-size:17px;line-height:1.45;color:var(--ink)}
+  .res #resultLine.ok{color:var(--g)}.res #resultLine.over{color:var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:12.5px;color:var(--muted);font-weight:600}
+  td.r,th.r{text-align:right}
+  .bar{height:7px;background:var(--soft);min-width:60px;border-radius:999px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:999px}
+  .tbl{overflow-x:auto}
+  tr.undone td{color:#9aa39d;text-decoration:line-through}
+  .links{display:grid;gap:8px}
+  .link{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 14px;background:#fcfcfa}
+  .link b{min-width:130px;font-size:14.5px}
+  .link code{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+
+  /* ---------- พรรค ---------- */
+  .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .pitem{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:12px;position:relative}
+  .pitem .no{position:absolute;left:8px;top:8px;min-width:28px;height:28px;padding:0 6px;border-radius:9px;background:var(--c);color:#fff;font-size:15px;font-weight:700;display:grid;place-items:center;z-index:1;box-shadow:0 0 0 2px #fff}
+  .pitem .thumb{width:64px;height:64px;border-radius:14px;background:var(--c);object-fit:cover;display:block}
+  .pitem .nm{font-weight:700;font-size:16px}
+  .pitem .ps{color:var(--muted);font-size:13.5px}
+  .pitem .acts{display:flex;gap:6px}
+  .swatches{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .swatches button{width:32px;height:32px;border-radius:10px;border:0;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+  .swatches button.on{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
+  .swatches input[type=color]{width:44px;height:32px;border:1px solid var(--line);border-radius:10px;padding:2px;background:#fff}
+  .imgs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+  .imgbox{border:1.5px dashed #c9cfc6;border-radius:16px;padding:12px;text-align:center;background:#fcfcfa}
+  .imgbox img{display:block;width:100%;height:160px;object-fit:contain;background:#fff;margin-bottom:10px;border-radius:12px}
+  .imgbox .empty{height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--soft);border-radius:12px;margin-bottom:10px;font-size:14px}
+  .note{background:var(--gold1);color:var(--gold9);border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:12px}
+
+  /* ---------- Dialog / Toast ---------- */
+  .veil{position:fixed;inset:0;background:rgba(13,30,20,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+  .dlg{width:100%;max-width:440px;background:var(--surface);border-radius:24px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);border-top:6px solid var(--gold)}
+  .dlg.danger{border-top-color:var(--red)}
+  .dlg h3{margin:0 0 6px;font-size:20px;font-weight:700}
+  .dlg p{margin:0 0 12px;color:var(--muted)}
+  .dlg .row{justify-content:flex-end;margin-top:14px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:999px;z-index:60;max-width:92%;font-size:14.5px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  .toast.bad{background:var(--red)}
+  .busy{position:fixed;top:0;left:0;right:0;height:3px;background:var(--gold);z-index:70;animation:busy 1s linear infinite;transform-origin:left}
+  @keyframes busy{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+  .mainfoot{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 0}
+
+  /* ---------- รายงาน (A4, ฟอนต์ Sarabun แบบหนังสือราชการ) ---------- */
+  .rep-wrap{overflow-x:auto;background:#dfe2db;padding:18px;border-radius:var(--r)}
+  #report{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#000;padding:14mm 18mm 10mm;font-family:"Sarabun",sans-serif;font-size:14.5px;line-height:1.5;position:relative;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+  #report h1{font-family:"Sarabun";font-size:21px;text-align:center;margin:0}
+  #report .sub{text-align:center;margin:0 0 4px}
+  #report .meta{text-align:center;font-size:13px;margin-bottom:8px}
+  #report h4{font-size:15.5px;margin:12px 0 4px}
+  #report table{font-size:14px;border:1px solid #000}
+  #report th,#report td{border:1px solid #000;padding:3px 8px;color:#000;font-size:14px}
+  #report th{background:#eee;font-weight:700}
+  #report .tot td{font-weight:700;background:#f5f5f5}
+  #report .verdict{border:2px solid #000;padding:10px 14px;margin-top:6px}
+  #report .draft{position:absolute;top:110mm;left:0;right:0;text-align:center;font-size:90px;font-weight:700;color:rgba(179,38,30,.13);transform:rotate(-22deg);pointer-events:none}
+  #report .signs{display:grid;grid-template-columns:1fr 1fr;gap:10px 30px;margin-top:8px;break-inside:avoid}
+  #report .sign{text-align:center;font-size:14px}
+  #report .sign .ln{margin-top:20px}
+  #report .foot{margin-top:18px;font-size:11px;color:#555;display:flex;justify-content:space-between;gap:10px;border-top:1px solid #bbb;padding-top:4px}
+  /* พิมพ์: ซ่อนทุกอย่างยกเว้นรายงาน และให้ขึ้นหน้าใหม่ได้เมื่อพรรคเยอะ */
+  @media print{
+    @page{size:A4;margin:12mm 0}
+    html,body{background:#fff}
+    #login,nav.side,.topbar,.pane:not(#p-rep),#p-rep > :not(.rep-wrap),.mainfoot,.toast,.busy,.veil,.rs{display:none!important}
+    .layout,.main{display:block;padding:0;margin:0;max-width:none}
+    .rep-wrap{padding:0;background:none;border-radius:0;overflow:visible}
+    #report{width:auto;min-height:0;margin:0;padding:0 18mm;box-shadow:none}
+    #report tr,#report .verdict,#report .signs{break-inside:avoid}
+    #report .rpage + .rpage{margin-top:0;padding-top:0;border-top:0}
+  }
+
+  /* ---------- มือถือ / แท็บเล็ต ---------- */
+  @media (max-width:1100px){ .c3{grid-column:span 6}.c5,.c7,.c4,.c8{grid-column:span 12} }
+  @media (max-width:860px){
+    .layout{grid-template-columns:minmax(0,1fr)}
+    nav.side{position:sticky;top:0;height:auto;z-index:9;flex-direction:row;overflow-x:auto;padding:10px 10px;gap:4px;align-items:center;scrollbar-width:none}
+    nav.side::-webkit-scrollbar{display:none}
+    .brand{padding:0 8px 0 2px;flex-shrink:0}
+    .brand b,.brand small{display:none}
+    nav.side button[data-p]{flex-shrink:0;width:auto;padding:9px 13px;white-space:nowrap;font-size:14px}
+    nav.side button[data-p] svg{display:none}
+    nav.side .credit{display:none}
+    .main{padding:14px 14px 30px}
+    h2{font-size:23px}
+    .grid2,.imgs{grid-template-columns:1fr}
+    .kpi b{font-size:28px}
+    .seg button{padding:0 6px;font-size:14px}
+    .link b{min-width:0;flex:1}
+    .link code{display:none}
+    .plist{grid-template-columns:1fr}
+    .grow{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+    .grow .gp{grid-column:1/-1}
+    .grow .ga{grid-column:1/-1;justify-content:flex-start;min-width:0}
+    .gedit{grid-template-columns:44px minmax(0,1fr) auto}
+    .gedit .num2{grid-column:span 1}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  /* ---------- เครื่องกรรมการ ---------- */
+  body{background:var(--bg)}
+  .stbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .stbtns button{height:auto;min-height:58px;border:1.5px solid var(--line);border-radius:14px;background:#fcfcfa;text-align:left;padding:8px 12px;font-weight:700;font-size:16px;line-height:1.25}
+  .stbtns button small{display:block;font-weight:500;font-size:12.5px;color:var(--muted)}
+  .stbtns button.on{border-color:var(--g);background:var(--g1);box-shadow:0 0 0 3px rgba(23,96,58,.12)}
+  header.dk{position:sticky;top:0;z-index:5;background:var(--g9);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  header.dk .who{flex:1;min-width:0}
+  header.dk .who b{display:block;font-size:18px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header.dk .who small{display:block;color:#a9c0b2;font-size:12.5px}
+  header.dk .cnt{text-align:right;line-height:1.15}
+  header.dk .cnt b{font-size:22px}
+  header.dk .cnt small{display:block;font-size:12px;color:#a9c0b2}
+  header.dk .ibtn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}
+  .net{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.1);font-size:13px;font-weight:600}
+  .net i{width:8px;height:8px;border-radius:50%;background:#58d68d}
+  .net.bad i{background:#ff7a6e}.net.bad{background:rgba(255,122,110,.18)}
+  .stpill{height:30px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;background:rgba(255,255,255,.1)}
+  .stpill.OPEN{background:var(--gold);color:var(--g9)}
+  .stpill.PAUSED{background:#ff7a6e;color:#3b0905}
+  .stpill.SEALED{background:#3b2a05;color:#ffd75e}
+  .stpill.ADV{background:#ffd75e;color:#3b2a05}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px 18px 30px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:18px}
+  .card h3{margin:0 0 12px;font-size:15px;color:var(--muted);font-weight:700}
+  .sbox{display:flex;gap:8px}
+  .sbox input{height:64px;font-size:30px;font-weight:700;letter-spacing:.04em;border-radius:16px;padding:0 18px}
+  .sbox .btn{height:64px;padding:0 22px;border-radius:16px;font-size:17px}
+  .hint{font-size:13px;color:var(--muted);margin-top:8px}
+  .hint kbd{font-family:inherit;font-size:12px;background:var(--soft);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 6px}
+  .found{display:grid;gap:6px;margin-top:12px}
+  .found button{display:flex;justify-content:space-between;gap:10px;text-align:left;border:1px solid var(--line);background:#fcfcfa;border-radius:12px;padding:10px 12px;font-size:15px}
+  .found button:hover{background:var(--soft)}
+  .found small{color:var(--muted)}
+  .stu{margin-top:14px;border-radius:18px;border:1.5px solid var(--line);overflow:hidden}
+  .stu .top{padding:16px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:start;border-left:10px solid var(--hc,#c9cfc6)}
+  .stu .nm{font-size:30px;font-weight:700;line-height:1.15}
+  .stu .meta{font-size:15px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .stu .meta b{color:var(--ink)}
+  .stu .hc{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;background:var(--hc);color:var(--hon,#fff);font-weight:700;font-size:14px}
+  .stu .tch{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;border:1.5px solid var(--ink);color:var(--ink);font-weight:700;font-size:14px;letter-spacing:.02em}
+  .stu .sid{font-size:14px;color:var(--muted);text-align:right}
+  .stu .sid b{display:block;font-size:20px;color:var(--ink)}
+  .verdict{padding:14px 18px;font-size:18px;font-weight:700;display:flex;gap:10px;align-items:center}
+  .verdict svg{width:26px;height:26px;flex-shrink:0}
+  .verdict.ok{background:var(--g1);color:var(--g)}
+  .verdict.no{background:var(--red1);color:var(--red)}
+  .verdict.warn{background:var(--gold1);color:var(--gold9)}
+  .pick{padding:14px 18px 18px;border-top:1px solid var(--line)}
+  .pick .flab{margin-bottom:8px}
+  .bsel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .ezc{display:flex;align-items:center;gap:10px;margin:12px 0 2px;font-size:15px;font-weight:600;cursor:pointer;line-height:1.35}
+  .ezc input{width:22px;height:22px;accent-color:var(--g);flex-shrink:0}
+  .ezc small{display:block;font-weight:500;color:var(--muted);font-size:13px}
+  .ezc.off{color:var(--muted)}
+  .bsel button{height:62px;border-radius:14px;border:1.5px solid var(--line);background:#fcfcfa;font-weight:700;font-size:16px;line-height:1.15}
+  .bsel button small{display:block;font-size:12px;font-weight:600;color:var(--muted)}
+  .bsel button.on{border-color:var(--g);background:var(--g);color:#fff}
+  .bsel button.on small{color:#cfe0d5}
+  .bsel button[disabled]{opacity:.45;cursor:not-allowed}
+  .go{width:100%;height:68px;margin-top:12px;border-radius:16px;font-size:21px}
+  .booths{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .bt{border-radius:18px;padding:14px 14px 12px;border:1.5px solid var(--line);background:#fcfcfa;position:relative;min-height:112px;display:flex;flex-direction:column}
+  .bt b{font-size:19px}
+  .bt .s{font-size:14px;font-weight:700;margin-top:2px}
+  .bt .t{font-size:30px;font-weight:700;margin-top:auto;line-height:1}
+  .bt .t small{font-size:13px;font-weight:600;margin-left:4px}
+  .bt.free{border-color:#bfe0cb;background:#f1f8f3}.bt.free .s{color:var(--g)}
+  .bt.wait{border-color:#f0dc9a;background:var(--gold1)}.bt.wait .s{color:var(--gold9)}
+  .bt.use{border-color:#f0c35a;background:#fff0c8}.bt.use .s{color:var(--gold9)}
+  .bt.late{border-color:#f3c8c3;background:var(--red1)}.bt.late .s,.bt.late .t{color:var(--red)}
+  .bt.off{border-color:#e6b8b3;background:#fbefed}.bt.off .s{color:var(--red)}
+  .bt.np .s{color:var(--muted)}
+  .bt .rs{position:absolute;right:10px;top:10px;height:30px;padding:0 10px;font-size:12.5px;border-radius:9px}
+  .recent{display:grid;gap:6px}
+  .recent > div:not(.empty){display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:14px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .recent > div:last-child{border-bottom:0}
+  .recent .tm{color:var(--muted);font-size:13px}
+  .recent .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .recent .r{font-size:12.5px;font-weight:700;white-space:nowrap}
+  .recent .r.ok{color:var(--g)}.recent .r.no{color:var(--red)}.recent .r.in{color:var(--gold9)}
+  .empty{color:var(--muted);font-size:14px;padding:6px 0}
+  .banner{background:var(--red1);color:var(--red);font-weight:700;padding:12px 16px;border-radius:14px;margin-bottom:12px}
+  .banner:empty{display:none}
+  .obanner{background:var(--gold1);color:var(--gold9);font-weight:600;padding:12px 16px;border-radius:14px;margin-bottom:12px;border:1px solid #f0dc9a}
+  .obanner b{display:block;font-size:16px}
+  .code{padding:18px;text-align:center;background:var(--g9);color:#fff}
+  .code small{display:block;color:#a9c0b2;font-size:14px}
+  .code b{display:block;font-size:52px;letter-spacing:.12em;line-height:1.1;color:var(--gold);margin:6px 0}
+  .code span{font-size:15px}
+  .bt.unk{border-style:dashed}.bt.unk .s{color:var(--muted)}
+  .bt .pq{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;color:var(--gold9);background:var(--gold1);border-radius:8px;padding:1px 8px;align-self:flex-start}
+  .bsel button.offb{border-style:dashed}
+  @media (max-width:900px){
+    .wrap{grid-template-columns:1fr;padding:12px}
+    .stu .nm{font-size:25px}
+    .sbox input{font-size:24px;height:58px}
+    .sbox .btn{height:58px}
+  }
+  @media (max-width:520px){
+    header.dk{padding:10px 12px;gap:8px}
+    header.dk .who{flex:1 1 calc(100% - 50px)}
+    header.dk .who small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    header.dk #btnOut{order:2}
+    header.dk .stpill,header.dk .net{order:3;height:28px;font-size:12.5px}
+    header.dk .cnt{order:4;margin-left:auto}
+    .bsel{grid-template-columns:repeat(2,minmax(0,1fr))}
+    header.dk .cnt b{font-size:18px}
+    .stu .top{grid-template-columns:1fr}
+    .stu .sid{text-align:left}
+  }
+</style>
+<script src="app.js"></script>
+</head>
+<body>
+
+<!-- ===== เข้าสู่ระบบ ===== -->
+<section id="login">
+  <div class="lwrap">
+    <form class="lbox" id="loginForm">
+      <div class="seal" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/></svg></div>
+      <h1>เครื่องกรรมการ</h1>
+      <p>เลือกจุดเลือกตั้งของเครื่องนี้ แล้วใส่ PIN</p>
+      <div class="stbtns" id="stBtns"><div class="empty">กำลังโหลดจุดเลือกตั้ง…</div></div>
+      <label class="f"><span>PIN กรรมการ</span><input type="password" id="lpin" inputmode="numeric" autocomplete="off" maxlength="8"></label>
+      <button class="btn pri" style="width:100%">เข้าสู่ระบบ</button>
+      <div class="err" id="lerr" role="alert"></div>
+      <a href="index.html?choose" style="display:block;text-align:center;font-size:13.5px;margin-top:6px">← หน้าแรก</a>
+    </form>
+    <div class="lfoot">ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ · โรงเรียนเทพศิรินทร์พุแค สระบุรี</div>
+  </div>
+</section>
+
+<!-- ===== หน้าหลัก ===== -->
+<section id="app" class="hide">
+  <header class="dk">
+    <div class="who"><b id="hSt">-</b><small id="hSub">-</small></div>
+    <span class="stpill" id="hStatus">-</span>
+    <span class="net" id="net"><i></i><span id="netText">ออนไลน์</span></span>
+    <div class="cnt"><b class="num" id="hTurn">0</b><small><span id="hTurnLab">ใช้สิทธิ์แล้ว</span> / <span id="hElig">0</span></small></div>
+    <button class="ibtn" id="btnOut" aria-label="ออกจากระบบ" title="ออกจากระบบ"><svg class="i" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 17l5-5-5-5M15 12H4"/></svg></button>
+  </header>
+
+  <div class="wrap">
+    <div>
+      <div class="banner" id="banner"></div>
+      <div class="obanner hide" id="obanner"></div>
+      <div class="card">
+        <h3 id="qTitle">ตรวจตัวตนนักเรียน</h3>
+        <form class="sbox" id="sForm" autocomplete="off">
+          <input type="text" id="q" inputmode="numeric" placeholder="เลขประจำตัวนักเรียน" aria-label="เลขประจำตัวนักเรียน หรือชื่อ">
+          <button class="btn pri">ค้นหา</button>
+        </form>
+        <div class="hint">พิมพ์เลขประจำตัวแล้วกด <kbd>Enter</kbd> · กด <kbd>Enter</kbd> อีกครั้งเพื่อปลดล็อกคูหาที่เลือกไว้ · ค้นด้วยชื่อก็ได้ · <kbd>Esc</kbd> ล้าง</div>
+        <div class="found" id="found"></div>
+        <div id="stu"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h3>คูหาของจุดนี้</h3>
+        <div class="booths" id="booths"></div>
+      </div>
+      <div class="card">
+        <h3>ล่าสุดที่เครื่องนี้</h3>
+        <div class="recent" id="recent"><div class="empty">ยังไม่มีรายการ</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="mainfoot" style="padding-bottom:20px">ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ · โรงเรียนเทพศิรินทร์พุแค สระบุรี</div>
+</section>
+
+<div class="veil hide" id="veil"><div class="dlg" id="dlg" role="dialog" aria-modal="true">
+  <h3 id="dTitle"></h3><p id="dText"></p>
+  <div id="dInputWrap" class="hide"><textarea id="dInput"></textarea></div>
+  <div class="err" id="dErr"></div>
+  <div class="row"><button class="btn ghost" id="dNo">ยกเลิก</button><button class="btn pri" id="dYes">ยืนยัน</button></div>
+</div></div>
+<div class="toast hide" id="toast" role="status"></div>
+
+<script>
+/* =========================================================
+   ส่วนที่ 3 : เครื่องกรรมการ
+   - รายชื่อของจุดนี้โหลดเก็บไว้ในเครื่อง (ค้นได้ทันที) และซิงก์เฉพาะส่วนที่เปลี่ยนทุก 2.5 วินาที
+   - การปลดล็อกคูหาตรวจซ้ำที่หลังบ้านทุกครั้ง (กันใช้สิทธิ์ซ้ำ / ผิดจุด)
+   ========================================================= */
+var POLL_MS = 2500;
+var D = { token: null, stid: '', station: null, rows: [], idx: {}, houses: {}, ver: 0, status: 'SETUP', booths: [], timeout: 180,
+  cur: null, pick: '', lastBooth: '', recent: [], online: true, busy: false, roundId: '',
+  off: null, offC: 1, offq: [], offMine: {}, syncing: false };
+var esc = EV.esc, fmt = EV.fmt;
+var ST_NAME = { SETUP: 'ยังไม่เปิด', OPEN: 'เปิดลงคะแนน', PAUSED: 'พักการลงคะแนน', SEALED: 'ปิดรอบล่วงหน้าแล้ว', CLOSED: 'ปิดลงคะแนนแล้ว', NOTODAY: 'จุดนี้ไม่เปิดวันนี้' };
+function $(id) { return document.getElementById(id); }
+function toast(m, bad) { var t = $('toast'); t.textContent = m; t.className = 'toast' + (bad ? ' bad' : ''); clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = 'toast hide'; }, 3200); }
+function hm(d) { d = d || new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+var ICON = {
+  ok: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>',
+  no: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+  warn: '<svg class="i" viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h0"/></svg>'
+};
+
+function dialog(o) {
+  $('dTitle').textContent = o.title; $('dText').textContent = o.text || '';
+  $('dlg').className = 'dlg' + (o.danger ? ' danger' : '');
+  $('dYes').className = 'btn ' + (o.danger ? 'red' : 'pri'); $('dYes').textContent = o.yes || 'ยืนยัน';
+  $('dInputWrap').classList.toggle('hide', !o.input); $('dInput').value = ''; $('dInput').placeholder = o.placeholder || ''; $('dErr').textContent = '';
+  $('veil').classList.remove('hide');
+  if (o.input) setTimeout(function () { $('dInput').focus(); }, 50);
+  $('dNo').onclick = function () { $('veil').classList.add('hide'); focusQ(); };
+  $('dYes').onclick = function () {
+    var v = $('dInput').value.trim();
+    if (o.input && o.required && !v) { $('dErr').textContent = o.required; return; }
+    $('veil').classList.add('hide'); o.onYes(v);
+  };
+}
+
+/** เรียกหลังบ้าน + แสดงสถานะเน็ต */
+function api(fn, args) {
+  return EV.call(fn, args).then(function (r) { setNet(true); return r; }, function (e) {
+    var m = String(e && e.message || e);
+    if (/^OFFLINE/.test(m)) setNet(false);
+    if (m.indexOf('AUTH') > -1) logoutLocal('หมดเวลาเข้าสู่ระบบ กรุณาเข้าใหม่');
+    throw e;
+  });
+}
+function setNet(ok) {
+  var changed = D.online !== ok;
+  D.online = ok;
+  $('net').className = 'net' + (ok ? '' : ' bad');
+  $('netText').textContent = ok ? 'ออนไลน์' : 'เน็ตหลุด · โหมดสำรอง';
+  if (changed && D.token) { renderBooths(); if (D.cur && D.cur.sid) showStudent(D.cur.sid, true); }
+  offBanner();
+}
+
+/* ---------- เข้าสู่ระบบ ---------- */
+function loadStations() {
+  if (!EV.ready) { $('stBtns').innerHTML = '<div class="err">ยังไม่ได้ใส่ลิงก์ /exec ในไฟล์ app.js</div>'; return; }
+  EV.call('getPublicSummary', []).then(function (s) {
+    var last = EV.store.get('ev_desk_stid');
+    $('stBtns').innerHTML = s.byStation.map(function (x) {
+      return '<button type="button" data-st="' + esc(x.stid) + '" class="' + (x.stid === last ? 'on' : '') + '">' + esc(x.name) + '<small>' + fmt(x.eligible) + ' คน</small></button>';
+    }).join('') || '<div class="err">ยังไม่มีจุดเลือกตั้ง</div>';
+    D.stid = last && s.byStation.some(function (x) { return x.stid === last; }) ? last : '';
+  }, function () { $('stBtns').innerHTML = '<div class="err">เชื่อมต่อหลังบ้านไม่ได้</div>'; });
+}
+$('stBtns').onclick = function (e) {
+  var b = e.target.closest('button[data-st]'); if (!b) return;
+  D.stid = b.getAttribute('data-st');
+  [].forEach.call($('stBtns').children, function (x) { x.classList.toggle('on', x === b); });
+  $('lpin').focus();
+};
+$('loginForm').onsubmit = function (e) {
+  e.preventDefault();
+  if (!D.stid) { $('lerr').textContent = 'กรุณาเลือกจุดเลือกตั้ง'; return; }
+  $('lerr').textContent = 'กำลังตรวจสอบ...';
+  EV.call('login', ['desk', $('lpin').value, D.stid]).then(function (r) {
+    if (!r.ok) { $('lerr').textContent = r.message; return; }
+    $('lpin').value = ''; $('lerr').textContent = '';
+    D.token = r.token; D.station = r.station;
+    EV.store.set('ev_desk_stid', D.stid);
+    try { sessionStorage.setItem('ev_desk', JSON.stringify({ token: r.token, stid: D.stid })); } catch (x) {}
+    enter();
+  }, function (err) { $('lerr').textContent = 'เชื่อมต่อไม่ได้: ' + err.message.replace(/^OFFLINE: /, ''); });
+};
+function logoutLocal(msg) {
+  D.token = null; try { sessionStorage.removeItem('ev_desk'); } catch (e) {}
+  $('app').classList.add('hide'); $('login').classList.remove('hide'); $('lerr').textContent = msg || ''; loadStations();
+}
+$('btnOut').onclick = function () {
+  dialog({ title: 'ออกจากระบบเครื่องกรรมการ?', yes: 'ออกจากระบบ', danger: true, onYes: function () { EV.call('logout', [D.token]).catch(function () {}); logoutLocal(''); } });
+};
+function enter() {
+  $('login').classList.add('hide'); $('app').classList.remove('hide');
+  try { D.recent = JSON.parse(EV.store.get('ev_desk_recent_' + D.stid) || '[]'); } catch (e) { D.recent = []; }
+  loadRoster(function () { poll(); focusQ(); });
+}
+
+/* ---------- รายชื่อในเครื่อง ---------- */
+function loadRoster(cb) {
+  api('getDeskRoster', [D.token]).then(function (r) {
+    D.station = r.station; D.ver = r.ver; D.roundId = r.roundId; D.scopeKey = r.scopeKey; D.scope = r.scope;
+    D.houses = {}; r.houses.forEach(function (h) { D.houses[h.gid] = h; });
+    setRows(r.rows);
+    D.off = r.off; initOff();
+    try { EV.store.set('ev_roster_' + D.stid, JSON.stringify({ roundId: r.roundId, ver: r.ver, rows: r.rows, houses: r.houses, station: r.station, off: r.off, scope: r.scope, at: Date.now() })); } catch (e) {}
+    $('hSt').textContent = r.station.name;
+    $('hSub').textContent = scopeText(r.scope, r.station) + ' · รายชื่อ ' + fmt(r.rows.length) + ' คน'; setSearchHint(r.scope, r.station);
+    cb && cb();
+  }, function () {
+    // เน็ตหลุดตอนเปิดหน้า: ใช้รายชื่อที่เก็บไว้ในเครื่อง
+    var c = null; try { c = JSON.parse(EV.store.get('ev_roster_' + D.stid) || 'null'); } catch (e) {}
+    if (c) {
+      D.station = c.station; D.ver = c.ver; D.roundId = c.roundId;
+      D.houses = {}; c.houses.forEach(function (h) { D.houses[h.gid] = h; });
+      D.off = c.off; initOff();
+      D.scope = c.scope || 'STATION';
+      setRows(c.rows); $('hSt').textContent = c.station.name; $('hSub').textContent = scopeText(D.scope, c.station) + ' · ใช้รายชื่อที่เก็บไว้ในเครื่อง'; setSearchHint(D.scope, c.station);
+    }
+    cb && cb();
+  });
+}
+/** วันล่วงหน้า: จุดล่วงหน้ารับทุกระดับชั้น · จุดอื่นไม่เปิด */
+function scopeText(scope, station) { return scope === 'ALL' ? 'วันเลือกตั้งล่วงหน้า · รับทุกระดับชั้นและครู' : scope === 'NONE' ? 'วันเลือกตั้งล่วงหน้า · จุดนี้ไม่เปิด' : station.levels + (station.teachers ? (station.levels ? ', ' : '') + 'ครู' : ''); }
+function isTeacherRow(r) { return r && r[1] === 'ครู'; }
+/** ช่องค้นหา: จุดที่มีครู พิมพ์รหัสครูที่มีตัวอักษรได้ */
+function setSearchHint(scope, station) {
+  var t = scope === 'ALL' || (station && station.teachers);
+  $('q').setAttribute('inputmode', t ? 'text' : 'numeric');
+  $('q').setAttribute('placeholder', t ? 'เลขประจำตัวนักเรียน / รหัสครู' : 'เลขประจำตัวนักเรียน');
+  $('qTitle').textContent = t ? 'ตรวจตัวตนนักเรียนและครู' : 'ตรวจตัวตนนักเรียน';
+}
+function setRows(rows) {
+  D.rows = rows; D.idx = {};
+  rows.forEach(function (r, i) { D.idx[r[0]] = i; });
+}
+function rowOf(sid) { var i = D.idx[sid]; return i === undefined ? null : D.rows[i]; }
+/** รหัสที่พิมพ์ → รหัสในรายชื่อ (รหัสครูไม่สนตัวพิมพ์เล็ก/ใหญ่) */
+function exactSid(q) {
+  if (rowOf(q)) return q;
+  var lq = q.toLowerCase();
+  for (var i = 0; i < D.rows.length; i++) if (String(D.rows[i][0]).toLowerCase() === lq) return D.rows[i][0];
+  return null;
+}
+function saveRosterCache() {
+  try { var c = JSON.parse(EV.store.get('ev_roster_' + D.stid) || 'null'); if (c) { c.rows = D.rows; c.ver = D.ver; EV.store.set('ev_roster_' + D.stid, JSON.stringify(c)); } } catch (e) {}
+}
+
+/* ---------- ซิงก์สถานะ ---------- */
+function poll() {
+  if (!D.token) return;
+  api('getDeskStatus', [D.token, D.ver]).then(function (s) {
+    if (s.roundId !== D.roundId || s.changes === null || (s.scopeKey && s.scopeKey !== D.scopeKey)) { D.ver = s.ver; loadRoster(); }
+    else if (s.changes.length) {
+      s.changes.forEach(function (c) { var r = rowOf(c[0]); if (r) { r[6] = c[1]; if (c[2] !== undefined) r[7] = c[2]; } });
+      D.ver = s.ver; saveRosterCache();
+      if (D.cur) showStudent(D.cur.sid, true);
+    }
+    D.phase = s.phase || ''; D.sched = s.schedule || {}; D.realStatus = s.status;
+    D.status = s.scope === 'NONE' && s.status !== 'SEALED' ? 'NOTODAY' : s.status; D.booths = s.booths; D.timeout = s.timeoutSec;
+    if (s.offBase > D.offC) { D.offC = s.offBase; saveOff(); }
+    syncOff();
+    $('hTurn').textContent = fmt(s.station.turnout); $('hElig').textContent = fmt(s.station.eligible);
+    $('hTurnLab').textContent = s.scope === 'ALL' ? 'ใช้สิทธิ์ล่วงหน้า' : 'ใช้สิทธิ์แล้ว';
+    var advOpen = s.phase === 'ADV' && (s.status === 'OPEN' || s.status === 'PAUSED');
+    $('hStatus').textContent = ST_NAME[D.status] + (advOpen && D.status !== 'NOTODAY' ? ' · ล่วงหน้า' : '');
+    $('hStatus').className = 'stpill ' + (advOpen && s.status === 'OPEN' && D.status !== 'NOTODAY' ? 'ADV' : D.status);
+    $('banner').textContent = D.status === 'OPEN' ? '' : D.status === 'PAUSED' ? 'พักการลงคะแนนอยู่ — ปลดล็อกคูหาไม่ได้ชั่วคราว' :
+      D.status === 'NOTODAY' ? 'วันนี้เป็นวันเลือกตั้งล่วงหน้า เปิดเฉพาะ' + (D.sched.advStationName || 'จุดล่วงหน้า') + ' — จุดนี้เปิดวันเลือกตั้งจริง ' + (D.sched.mainDateText || '') :
+      D.status === 'SEALED' ? 'ปิดรอบเลือกตั้งล่วงหน้าแล้ว — ปลดล็อกคูหาได้อีกครั้งวันเลือกตั้งจริง ' + (D.sched.mainDateText || '') :
+      D.status === 'CLOSED' ? 'ปิดลงคะแนนแล้ว' : 'ยังไม่เปิดลงคะแนน — รอผู้ดูแลเปิด';
+    offBanner();
+    renderBooths();
+    if (D.cur) renderPick();
+  }).catch(function () { if (D.cur && D.cur.ready) renderPick(); }).then(function () { setTimeout(poll, POLL_MS); });
+}
+
+/* ---------- ค้นหา ---------- */
+function focusQ() { setTimeout(function () { $('q').focus(); $('q').select(); }, 30); }
+$('sForm').onsubmit = function (e) {
+  e.preventDefault();
+  var q = $('q').value.trim();
+  if (!q) return;
+  // กด Enter ซ้ำบนคนเดิมที่พร้อมปลดล็อก = ปลดล็อกเลย
+  if (D.cur && D.cur.sid === q && D.cur.ready && D.pick) return doCheckIn();
+  var ex = exactSid(q);
+  if (ex && D.cur && D.cur.sid === ex && D.cur.ready && D.pick) return doCheckIn();
+  // เลขประจำตัว / รหัสครู (ไม่มีเว้นวรรคและมีตัวเลข) → ตรวจสิทธิ์ · นอกนั้นค้นด้วยชื่อ
+  if (ex || /^\d+$/.test(q) || (/\d/.test(q) && !/\s/.test(q))) { $('found').innerHTML = ''; return showStudent(ex || q); }
+  var words = q.toLowerCase().split(/\s+/);
+  var hits = D.rows.filter(function (r) { var t = (r[3] + ' ' + r[4]).toLowerCase(); return words.every(function (w) { return t.indexOf(w) > -1; }); }).slice(0, 8);
+  $('stu').innerHTML = '';
+  $('found').innerHTML = hits.length ? hits.map(function (r) {
+    return '<button type="button" data-sid="' + esc(r[0]) + '"><span>' + esc(r[2] + r[3] + ' ' + r[4]) + ' <small>' + (isTeacherRow(r) ? 'ครู' : esc(r[1])) + '</small></span><small class="num">' + esc(r[0]) + '</small></button>';
+  }).join('') : '<div class="empty">ไม่พบชื่อนี้ในรายชื่อของจุดนี้</div>';
+};
+$('found').onclick = function (e) { var b = e.target.closest('button[data-sid]'); if (!b) return; $('q').value = b.getAttribute('data-sid'); $('found').innerHTML = ''; showStudent($('q').value); focusQ(); };
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && $('veil').classList.contains('hide')) { $('q').value = ''; $('found').innerHTML = ''; $('stu').innerHTML = ''; D.cur = null; focusQ(); }
+});
+
+/** แสดงนักเรียน (จากรายชื่อในเครื่อง ถ้าไม่มีถามหลังบ้านว่าอยู่จุดไหน) */
+function showStudent(sid, keepPick) {
+  if (!D.cur || D.cur.sid !== sid) D.easy = false;          // โหมดอ่านง่ายติ๊กใหม่ทุกคน
+  var r = rowOf(sid);
+  if (!r) {
+    D.cur = { sid: sid, ready: false };
+    $('stu').innerHTML = '<div class="stu"><div class="verdict warn">' + ICON.warn + 'กำลังตรวจในบัญชีรายชื่อทั้งหมด…</div></div>';
+    api('lookupStudent', [D.token, sid]).then(function (x) {
+      if (!D.cur || D.cur.sid !== sid) return;
+      if (!x.ok) return paint(null, sid, 'no', x.message);
+      paint({ name: x.student.name, classroom: x.student.classroom, house: x.student.house, color: x.student.houseColor }, sid, 'no',
+        x.state === 'VOTED' ? (x.round === 'ADV' ? 'ใช้สิทธิ์ล่วงหน้าแล้ว' : 'ใช้สิทธิ์แล้ว') :
+        D.status === 'NOTODAY' ? 'วันนี้ใช้สิทธิ์ล่วงหน้าได้ที่' + (D.sched.advStationName || 'จุดล่วงหน้า') : (x.student.classroom === 'ครู' ? 'ครูท่านนี้ใช้สิทธิ์ที่' : 'นักเรียนคนนี้ใช้สิทธิ์ที่') + x.stationName);
+    }, function () { if (D.cur && D.cur.sid === sid) paint(null, sid, 'no', 'ไม่พบในรายชื่อของจุดนี้ (เน็ตหลุด ตรวจจุดอื่นไม่ได้)'); });
+    return;
+  }
+  var h = D.houses[r[5]] || {};
+  var info = { name: r[2] + r[3] + ' ' + r[4], classroom: r[1], house: h.name || '-', color: h.color || '#c9cfc6' };
+  var st = r[6];
+  if (st === 'VOTED') return paint(info, sid, 'no', r[7] === 'ADV' && D.phase === 'MAIN' ? 'ใช้สิทธิ์ล่วงหน้าแล้ว' : 'ใช้สิทธิ์แล้ว');
+  if (st === 'PAPER') return paint(info, sid, 'no', 'ใช้สิทธิ์ด้วยบัตรกระดาษแล้ว');
+  if (st === 'ISSUED' && D.cur && D.cur.sid === sid && D.cur.reissue) { D.cur.info = info; D.cur.ready = true; if (!keepPick || !D.pick) D.pick = suggestBooth(); return paint(info, sid, 'warn', 'ออกรหัสใหม่ บัตรเดิมจะถูกยกเลิกเมื่อเน็ตกลับมา', true); }
+  if (st === 'ISSUED') { paint(info, sid, 'warn', 'กำลังอยู่ในคูหา'); appendRestore(sid); return; }
+  D.cur = { sid: sid, info: info, ready: true };
+  if (!keepPick || !D.pick) D.pick = suggestBooth();
+  paint(info, sid, 'ok', 'มีสิทธิ์เลือกตั้ง ยังไม่ได้ใช้สิทธิ์', true);
+}
+function paint(info, sid, cls, text, pick) {
+  if (!pick) D.cur = { sid: sid, info: info, ready: false };
+  else D.cur.info = info;
+  $('stu').innerHTML = '<div class="stu">' +
+    (info ? '<div class="top" style="--hc:' + esc(info.color) + ';--hon:' + EV.onColor(info.color) + '"><div><div class="nm">' + esc(info.name) + '</div>' +
+      '<div class="meta">' + (info.classroom === 'ครู' ? '<span class="tch">ครู</span>' : '<span>ห้อง <b>' + esc(info.classroom) + '</b></span>') + '<span class="hc">' + esc(info.house) + '</span></div></div>' +
+      '<div class="sid">' + (info.classroom === 'ครู' ? 'รหัสครู' : 'เลขประจำตัว') + '<b class="num">' + esc(sid) + '</b></div></div>' : '') +
+    '<div class="verdict ' + cls + '">' + ICON[cls] + esc(text) + '</div>' +
+    (pick ? '<div class="pick" id="pick"></div>' : '') + '</div>';
+  if (pick) renderPick();
+}
+function appendRestore(sid) {
+  var s = $('stu').querySelector('.stu');
+  var d = document.createElement('div'); d.className = 'pick';
+  if (D.online) {
+    d.innerHTML = '<button class="btn" id="btnRestore">คืนสิทธิ์ (กรณีออกจากคูหาโดยไม่ยืนยัน / ปลดล็อกผิดคูหา)</button>';
+    s.appendChild(d);
+    $('btnRestore').onclick = function () { restore(sid); };
+    return;
+  }
+  // เน็ตหลุด: คืนสิทธิ์ที่หลังบ้านไม่ได้ → ออกรหัสสำรองใหม่ (บัตรเดิมถูกยกเลิกตอนซิงก์) หรือยกเลิกรหัสสำรองที่ออกไป
+  d.innerHTML = '<div class="hint" style="margin:0 0 10px">เน็ตหลุดอยู่ ถ้านักเรียนออกจากคูหาโดยยังไม่ได้กดยืนยัน ออกรหัสใหม่ให้ได้ บัตรเดิมจะถูกยกเลิกเมื่อเน็ตกลับมา</div>' +
+    '<button class="btn" id="btnReissue">ออกรหัสใหม่ให้นักเรียนคนนี้</button>' +
+    (D.offMine[sid] ? ' <button class="btn ghost" id="btnOffCancel">ยกเลิกรหัสที่ออกไป</button>' : '');
+  s.appendChild(d);
+  $('btnReissue').onclick = function () {
+    dialog({ title: 'ออกรหัสใหม่ให้ ' + sid + '?', text: 'ใช้เมื่อแน่ใจว่านักเรียนยังไม่ได้กดยืนยันที่คูหา ถ้ากดยืนยันไปแล้ว คะแนนเดิมจะไม่ถูกนับและต้องลงคะแนนใหม่', yes: 'ออกรหัสใหม่',
+      onYes: function () { D.cur = { sid: sid, reissue: true }; D.pick = ''; showStudent(sid); focusQ(); } });
+  };
+  if ($('btnOffCancel')) $('btnOffCancel').onclick = function () {
+    dialog({ title: 'ยกเลิกรหัสสำรองของ ' + sid + '?', text: 'นักเรียนกลับมาใช้สิทธิ์ใหม่ได้ ถ้ากดยืนยันที่คูหาไปแล้ว คะแนนนั้นจะไม่ถูกนับ', yes: 'ยกเลิกรหัส', danger: true,
+      onYes: function () {
+        D.offq.push({ sid: sid, c: D.offMine[sid], cancel: 1, at: Date.now() }); delete D.offMine[sid];
+        var row = rowOf(sid); if (row) row[6] = '';
+        saveOff(); saveRosterCache(); addRecent(sid, info0(sid), '', 'ok', 'ยกเลิกรหัสสำรอง'); showStudent(sid); focusQ();
+      } });
+  };
+}
+
+/* ---------- เลือกคูหา ---------- */
+function freeBooths() { return D.booths.filter(function (b) { return D.online && b.paired && b.online && b.state === 'LOCKED'; }); }
+/** คูหาที่ต้องใช้รหัสสำรอง: เครื่องกรรมการเน็ตหลุด (ทุกคูหาที่ผูกแล้ว) หรือคูหานั้นขาดการติดต่อ */
+function codeBooths() { return D.booths.filter(function (b) { return b.paired && (!D.online || !b.online); }); }
+function needCode(bid) { return codeBooths().some(function (b) { return b.bid === bid; }); }
+function suggestBooth() {
+  var f = freeBooths();
+  if (!f.length && !D.online) f = codeBooths();
+  if (!f.length) return '';
+  var ids = D.booths.map(function (b) { return b.bid; });
+  var start = ids.indexOf(D.lastBooth);
+  for (var i = 1; i <= ids.length; i++) {
+    var id = ids[(start + i + ids.length) % ids.length];
+    if (f.some(function (b) { return b.bid === id; })) return id;
+  }
+  return f[0].bid;
+}
+function renderPick() {
+  var box = $('pick'); if (!box) return;
+  var free = freeBooths(), coded = codeBooths();
+  var okB = function (bid) { return free.concat(coded).some(function (b) { return b.bid === bid; }); };
+  if (D.pick && !okB(D.pick)) D.pick = '';
+  if (!D.pick) D.pick = suggestBooth();
+  var can = D.status === 'OPEN' && D.pick && !D.busy;
+  var code = D.pick && needCode(D.pick);
+  var name = (D.booths.filter(function (b) { return b.bid === D.pick; })[0] || {}).name || '';
+  box.innerHTML = '<span class="flab">เลือกคูหา' + (D.online ? '' : ' · เน็ตหลุด ดูคูหาที่ว่างด้วยตา') + '</span><div class="bsel">' + D.booths.map(function (b) {
+    var ok = okB(b.bid), isCode = needCode(b.bid);
+    var why = !b.paired ? 'ยังไม่ผูก' : !D.online ? 'ใช้รหัส' : !b.online ? 'ขาดการติดต่อ · ใช้รหัส' : b.state !== 'LOCKED' ? 'ไม่ว่าง' : 'ว่าง';
+    return '<button type="button" data-b="' + b.bid + '" class="' + (b.bid === D.pick ? 'on' : '') + (isCode ? ' offb' : '') + '"' + (ok ? '' : ' disabled') + '>' + esc(b.name) + '<small>' + why + '</small></button>';
+  }).join('') + '</div>' +
+    (code ? '<div class="ezc off">โหมดอ่านง่าย: แจ้งนักเรียนให้แตะปุ่ม “ตัวใหญ่ อ่านง่าย” ที่คูหาเอง</div>' :
+      '<label class="ezc"><input type="checkbox" id="ezChk"' + (D.easy ? ' checked' : '') + '><span>เปิดโหมดอ่านง่ายที่คูหาให้นักเรียนคนนี้<small>ตัวใหญ่ คอนทราสต์สูง · ไม่บันทึกว่าใครใช้</small></span></label>') +
+    '<button class="btn ' + (code ? 'yel' : 'pri') + ' go" id="btnGo"' + (can ? '' : ' disabled') + '>' +
+    (D.busy ? 'กำลังปลดล็อก…' : D.status !== 'OPEN' ? ST_NAME[D.status] : !D.pick ? 'ไม่มีคูหาว่าง รอสักครู่' : code ? 'ออกรหัสปลดล็อกสำรอง' + esc(name) + ' (Enter)' : 'ปลดล็อก' + esc(name) + ' (Enter)') + '</button>';
+  box.querySelector('.bsel').onclick = function (e) { var b = e.target.closest('button[data-b]'); if (!b || b.disabled) return; D.pick = b.getAttribute('data-b'); renderPick(); focusQ(); };
+  $('btnGo').onclick = doCheckIn;
+  if ($('ezChk')) $('ezChk').onchange = function () { D.easy = this.checked; focusQ(); };
+}
+
+function doCheckIn() {
+  if (!D.cur || !D.cur.ready || !D.pick || D.busy) return;
+  if (needCode(D.pick)) return doOfflineCode();
+  var sid = D.cur.sid, bid = D.pick, info = D.cur.info;
+  D.busy = true; renderPick();
+  api('checkIn', [D.token, sid, bid, { easy: !!D.easy }]).then(function (r) {
+    D.busy = false;
+    if (!r.ok) {
+      addRecent(sid, info ? info.name : sid, '', 'no', r.message);
+      if (r.code === 'VOTED' || r.code === 'IN_PROGRESS' || r.code === 'PAPER') { var row = rowOf(sid); if (row) { row[6] = r.code === 'IN_PROGRESS' ? 'ISSUED' : r.code === 'PAPER' ? 'PAPER' : 'VOTED'; if (r.round) row[7] = r.round; } }
+      if (r.code === 'BOOTH_BUSY' || r.code === 'BOOTH_OFFLINE' || r.code === 'BOOTH_UNPAIRED') { D.pick = ''; toast(r.message, true); renderPick(); return; }
+      paint(info, sid, 'no', r.message); return;
+    }
+    var row2 = rowOf(sid); if (row2) row2[6] = 'ISSUED';
+    D.lastBooth = bid;
+    var b = D.booths.filter(function (x) { return x.bid === bid; })[0]; if (b) b.state = 'UNLOCKED';
+    addRecent(sid, info.name, r.booth.name, 'in', 'เข้า' + r.booth.name);
+    $('stu').innerHTML = '<div class="stu"><div class="verdict ok" style="font-size:22px">' + ICON.ok + 'ปลดล็อก' + esc(r.booth.name) + ' แล้ว — เชิญ ' + esc(info.name) + '</div></div>';
+    $('q').value = ''; D.cur = null; D.pick = ''; D.easy = false;
+    renderBooths(); focusQ();
+  }, function (e) {
+    D.busy = false; renderPick();
+    toast('ปลดล็อกไม่สำเร็จ: ' + String(e.message).replace(/^OFFLINE: /, ''), true);
+  });
+}
+
+function restore(sid) {
+  dialog({ title: 'คืนสิทธิ์ ' + sid + '?', text: 'ยกเลิกบัตรที่ค้างอยู่ในคูหา นักเรียนกลับมาใช้สิทธิ์ใหม่ได้', input: true, required: 'กรุณาระบุเหตุผล', placeholder: 'เหตุผล เช่น ออกจากคูหาโดยไม่กดยืนยัน', yes: 'คืนสิทธิ์',
+    onYes: function (v) {
+      (function go(force) { api('restoreRight', [D.token, sid, v, force]).then(function (r) {
+        if (!r.ok && r.code === 'OFFLINE_CONFIRM') return dialog({ title: 'ยืนยันคืนสิทธิ์อีกครั้ง', text: r.message, yes: 'คืนสิทธิ์', danger: true, onYes: function () { go(true); } });
+        if (!r.ok) return toast(r.message, true);
+        var row = rowOf(sid); if (row) row[6] = '';
+        var rr = rowOf(sid); toast('คืนสิทธิ์แล้ว'); addRecent(sid, rr ? rr[2] + rr[3] + ' ' + rr[4] : sid, '', 'ok', 'คืนสิทธิ์'); showStudent(sid); focusQ();
+      }, function (e) { toast(e.message, true); }); })(false);
+    } });
+}
+
+/* ---------- รหัสปลดล็อกสำรอง (เน็ตหลุด / คูหาขาดการติดต่อ) ---------- */
+function offKey() { return D.stid + '_' + D.roundId; }
+function initOff() {
+  try { D.offq = JSON.parse(EV.store.get('ev_offq_' + offKey()) || '[]'); } catch (e) { D.offq = []; }
+  try { D.offMine = JSON.parse(EV.store.get('ev_offmine_' + offKey()) || '{}'); } catch (e) { D.offMine = {}; }
+  D.offC = Math.max(Number(EV.store.get('ev_offc_' + offKey()) || 0), D.off ? D.off.base : 1);
+  offBanner();
+}
+function saveOff() {
+  EV.store.set('ev_offq_' + offKey(), JSON.stringify(D.offq));
+  EV.store.set('ev_offmine_' + offKey(), JSON.stringify(D.offMine));
+  EV.store.set('ev_offc_' + offKey(), String(D.offC));
+  offBanner();
+}
+function houseList() { return Object.keys(D.houses).sort(); }
+function info0(sid) { var r = rowOf(sid); return r ? r[2] + r[3] + ' ' + r[4] : sid; }
+function offBanner() {
+  var el = $('obanner'); if (!el) return;
+  var n = D.offq.length;
+  if (D.online && !n) { el.classList.add('hide'); return; }
+  el.classList.remove('hide');
+  el.innerHTML = D.online && D.realStatus === 'SEALED' ? '<b>รายการรหัสสำรอง ' + n + ' รายการ จะส่งเมื่อเปิดเลือกตั้งจริง</b>อย่าล้างข้อมูลหรือเปลี่ยนเครื่องนี้'
+    : D.online ? '<b>กำลังส่งรายการรหัสสำรอง ' + n + ' รายการ…</b>'
+    : '<b>เน็ตหลุด — ใช้รหัสปลดล็อกสำรองได้</b>ตรวจสิทธิ์จากรายชื่อในเครื่อง ออกรหัส 7 หลักให้นักเรียนพิมพ์ที่คูหา' + (n ? ' · รอส่ง ' + n + ' รายการ (ส่งเองเมื่อเน็ตกลับ)' : '');
+}
+function doOfflineCode() {
+  if (!D.off || !D.off.key) return toast('ยังไม่มีกุญแจรหัสสำรอง กรุณาต่อเน็ตแล้วเปิดหน้านี้ใหม่หนึ่งครั้ง', true);
+  var sid = D.cur.sid, bid = D.pick, row = rowOf(sid), info = D.cur.info;
+  if (!row) return;
+  var c = D.offC++;
+  var code = EV.offCode(D.off.key, D.stid, bid, c, row[5], houseList());
+  D.offq.push({ sid: sid, c: c, bid: bid, at: Date.now() });
+  D.offMine[sid] = c; row[6] = 'ISSUED'; D.lastBooth = bid;
+  saveOff(); saveRosterCache();
+  var bname = (D.booths.filter(function (b) { return b.bid === bid; })[0] || {}).name || bid;
+  addRecent(sid, info.name, bname, 'in', 'รหัสสำรอง ' + bname);
+  $('stu').innerHTML = '<div class="stu"><div class="code"><small>รหัสปลดล็อกสำรอง · ' + esc(bname) + '</small><b class="num" id="offCode">' + code.slice(0, 1) + ' ' + code.slice(1, 4) + ' ' + code.slice(4) + '</b>' +
+    '<span>ให้ ' + esc(info.name) + ' แตะ "รหัสปลดล็อกสำรอง" ที่' + esc(bname) + ' แล้วพิมพ์รหัสนี้</span></div></div>';
+  $('q').value = ''; D.cur = null; D.pick = '';
+  focusQ(); syncOff();
+}
+/** ส่งรายการรหัสสำรองขึ้นหลังบ้าน (ส่งซ้ำได้) */
+function syncOff() {
+  if (!D.offq.length || D.syncing || !D.online || !D.token) return;
+  var batch = D.offq.slice(0, 200);
+  D.syncing = true;
+  api('offlineSync', [D.token, batch]).then(function (r) {
+    D.syncing = false;
+    if (!r.ok && r.code === 'SEALED') return;              // พักหีบ: เก็บไว้ส่งวันเลือกตั้งจริง
+    if (!r.ok) return toast(r.message, true);
+    D.offq = D.offq.slice(batch.length);
+    batch.forEach(function (it) { if (D.offMine[it.sid] === it.c) delete D.offMine[it.sid]; });
+    if (r.base > D.offC) D.offC = r.base;
+    saveOff();
+    (r.conflicts || []).forEach(function (x) { addRecent(x.sid, info0(x.sid), '', 'no', 'รหัสสำรองไม่นับ: ' + x.reason); });
+    toast('ส่งรายการรหัสสำรองแล้ว ' + batch.length + ' รายการ' + (r.conflicts.length ? ' · ขัดแย้ง ' + r.conflicts.length : ''), !!r.conflicts.length);
+  }, function () { D.syncing = false; });
+}
+
+/* ---------- คูหา ---------- */
+function renderBooths() {
+  var to = D.timeout || 180;
+  $('booths').innerHTML = D.booths.map(function (b) {
+    var cls, s, t = '';
+    if (!b.paired) { cls = 'np'; s = 'ยังไม่ผูกเครื่อง'; }
+    else if (!D.online) { cls = 'unk'; s = 'ไม่ทราบสถานะ (เน็ตหลุด)'; }
+    else if (!b.online) { cls = 'off'; s = 'ขาดการติดต่อ · ใช้รหัสสำรองได้'; }
+    else if (b.state === 'LOCKED') { cls = 'free'; s = 'ว่าง'; }
+    else {
+      var late = b.busySec > to - 20;
+      cls = late ? 'late' : (b.state === 'IN_USE' ? 'use' : 'wait');
+      s = b.state === 'IN_USE' ? 'กำลังลงคะแนน' : 'รอนักเรียนเข้าคูหา';
+      t = '<div class="t num">' + Math.floor(b.busySec / 60) + ':' + ('0' + b.busySec % 60).slice(-2) + '<small>นาที</small></div>';
+    }
+    return '<div class="bt ' + cls + '"><b>' + esc(b.name) + '</b><div class="s">' + s + '</div>' + (b.pending ? '<span class="pq">คะแนนรอส่ง ' + b.pending + '</span>' : '') + (cls === 'unk' ? '' : t) +
+      (b.state !== 'LOCKED' && b.paired && D.online ? '<button class="btn sm ghost rs" data-rs="' + b.bid + '">รีเซ็ต</button>' : '') + '</div>';
+  }).join('') || '<div class="empty">จุดนี้ยังไม่มีคูหา</div>';
+}
+$('booths').onclick = function (e) {
+  var bid = e.target.getAttribute('data-rs'); if (!bid) return;
+  var b = D.booths.filter(function (x) { return x.bid === bid; })[0];
+  dialog({ title: 'รีเซ็ต' + (b ? b.name : '') + '?', text: 'ยกเลิกบัตรที่ค้างในคูหานี้และคืนสิทธิ์ให้นักเรียน (ใช้เมื่อคูหาค้างหรือนักเรียนออกไปแล้ว)', danger: true, input: true, required: 'กรุณาระบุเหตุผล', placeholder: 'เหตุผล', yes: 'รีเซ็ตคูหา',
+    onYes: function (v) {
+      (function go(force) { api('deskResetBooth', [D.token, bid, v, force]).then(function (r) {
+        if (!r.ok && r.code === 'OFFLINE_CONFIRM') return dialog({ title: 'ยืนยันรีเซ็ตอีกครั้ง', text: r.message, yes: 'รีเซ็ตคูหา', danger: true, onYes: function () { go(true); } });
+        if (r.ok) { toast('รีเซ็ตคูหาแล้ว'); addRecent('', '', b ? b.name : bid, 'ok', 'รีเซ็ต' + (b ? b.name : '')); } else toast(r.message, true);
+      }, function (er) { toast(er.message, true); }); })(false);
+    } });
+};
+
+/* ---------- รายการล่าสุด ---------- */
+function addRecent(sid, name, booth, cls, text) {
+  D.recent.unshift({ t: hm(), sid: sid, name: name, cls: cls, text: text });
+  D.recent = D.recent.slice(0, 12);
+  EV.store.set('ev_desk_recent_' + D.stid, JSON.stringify(D.recent));
+  renderRecent();
+}
+function renderRecent() {
+  $('recent').innerHTML = D.recent.length ? D.recent.map(function (r) {
+    return '<div><span class="tm num">' + esc(r.t) + '</span><span class="nm">' + esc(r.name || '') + (r.sid && r.name !== r.sid ? ' <span class="tm">' + esc(r.sid) + '</span>' : '') + '</span><span class="r ' + r.cls + '">' + esc(r.text) + '</span></div>';
+  }).join('') : '<div class="empty">ยังไม่มีรายการ</div>';
+}
+
+/* ---------- เริ่มต้น ---------- */
+(function init() {
+  var s = null; try { s = JSON.parse(sessionStorage.getItem('ev_desk') || 'null'); } catch (e) {}
+  if (!s) return loadStations();
+  D.token = s.token; D.stid = s.stid;
+  EV.call('checkSession', [s.token]).then(function (r) {
+    if (r.ok && r.role === 'desk') { enter(); renderRecent(); } else logoutLocal('');
+  }, function () { enter(); renderRecent(); });
+})();
+</script>
+</body>
+</html>

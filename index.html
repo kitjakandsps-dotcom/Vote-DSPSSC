@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d3b23">
+<title>ระบบเลือกตั้งบนเครื่อง · โรงเรียนเทพศิรินทร์พุแค สระบุรี</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d3b23'/%3E%3Cpath d='M9 17l5 5 9-11' stroke='%23f2b705' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!--
+  ระบบเลือกตั้งบนเครื่อง (ประธานนักเรียน + ประธานคณะสี) · โรงเรียนเทพศิรินทร์พุแค สระบุรี
+  ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ
+  ส่วนที่ 5 : หน้าแรก (index.html) — เลือกว่าเครื่องนี้ทำหน้าที่อะไร
+  ติ๊ก "จำไว้" แล้วครั้งต่อไปเปิดลิงก์หลักจะเข้าหน้านั้นทันที · เปลี่ยนได้ที่ index.html?choose
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="app.js"></script>
+<script>
+  (function () {   // เครื่องที่จำหน้าที่ไว้: ไปหน้านั้นเลย
+    if (/[?&]choose/.test(location.search)) return;
+    var r = EV.store.get('ev_role');
+    if (r && EV.roles.some(function (x) { return x.file === r; })) location.replace(r);
+  })();
+</script>
+<style>
+  :root{
+    --bg:#f4f3ee; --surface:#fff; --ink:#14201a; --muted:#5f6b64; --line:#e3e5de; --soft:#eef0ea;
+    --g:#17603a; --g9:#0d3b23; --g1:#e7f0ea; --gold:#f2b705; --gold1:#fff5d2; --gold9:#6b5000;
+    --red:#c0352b; --red1:#fdecea;
+    --r:18px; --sh:0 1px 2px rgba(20,32,26,.05),0 6px 18px rgba(20,32,26,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Anuphan",system-ui,sans-serif;font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .hide{display:none!important}
+  button,input,select,textarea{font-family:inherit;font-size:15.5px;color:inherit}
+  button{cursor:pointer}
+  a{color:var(--g)}
+  svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+  body{background:var(--g9);color:#fff;min-height:100vh;display:flex;flex-direction:column;position:relative;overflow-x:hidden}
+  body::before{content:"";position:absolute;width:560px;height:560px;border-radius:50%;border:84px solid rgba(242,183,5,.075);right:-240px;top:-260px;pointer-events:none}
+  .wrap{width:min(1080px,100%);margin:0 auto;padding:44px 24px 24px;flex:1;position:relative}
+  .head{display:flex;gap:16px;align-items:center}
+  .seal{width:56px;height:56px;border-radius:16px;background:var(--gold);display:grid;place-items:center;flex-shrink:0}
+  .seal svg{width:30px;height:30px;stroke:var(--g9);stroke-width:2.4}
+  .head small{display:block;color:#a9c0b2;font-size:14.5px}
+  .head h1{margin:0;font-size:clamp(24px,3.4vw,36px);line-height:1.15}
+  .lead{color:#cfe0d5;margin:26px 0 18px;font-size:16.5px}
+  .roles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .role{background:#fff;color:var(--ink);border-radius:22px;padding:20px 18px 18px;text-decoration:none;display:flex;flex-direction:column;min-height:210px;position:relative;transition:transform .12s,box-shadow .12s;border:0;text-align:left;font:inherit}
+  .role:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.25)}
+  .role .ic{width:52px;height:52px;border-radius:15px;background:var(--g1);display:grid;place-items:center}
+  .role .ic svg{width:28px;height:28px;stroke:var(--g);stroke-width:1.9}
+  .role b{font-size:20px;margin-top:auto;padding-top:20px}
+  .role span{color:var(--muted);font-size:14px;line-height:1.4}
+  .role .k{position:absolute;right:16px;top:18px;font-size:12.5px;font-weight:700;color:var(--muted)}
+  .role.adm{background:rgba(255,255,255,.07);color:#fff}
+  .role.adm .ic{background:rgba(255,255,255,.08)}.role.adm .ic svg{stroke:var(--gold)}
+  .role.adm span,.role.adm .k{color:#a9c0b2}
+  .rem{display:flex;align-items:center;gap:10px;margin-top:18px;color:#cfe0d5;font-size:15px;cursor:pointer;width:fit-content}
+  .rem input{width:20px;height:20px;accent-color:var(--gold)}
+  .cur{margin-top:10px;font-size:14px;color:#a9c0b2}
+  .cur button{background:none;border:0;color:var(--gold);font-weight:700;padding:0;text-decoration:underline}
+  .stu{display:flex;align-items:center;gap:14px;margin-top:22px;background:var(--gold);color:var(--g9);border-radius:20px;padding:15px 18px;text-decoration:none;max-width:560px;transition:transform .12s}
+  .stu:hover{transform:translateY(-2px)}
+  .stu .ic{width:46px;height:46px;border-radius:13px;background:rgba(13,59,35,.1);display:grid;place-items:center;flex-shrink:0}
+  .stu .ic svg{width:25px;height:25px;stroke:var(--g9);stroke-width:2}
+  .stu b{display:block;font-size:17.5px;line-height:1.25}
+  .stu span{font-size:14px;opacity:.8}
+  .stu .ar{margin-left:auto;font-size:22px;font-weight:700}
+  .warn{background:#ff7a6e;color:#3b0905;font-weight:700;border-radius:14px;padding:12px 16px;margin-top:20px}
+  .steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:34px;counter-reset:s}
+  .steps div{border-top:2px solid rgba(255,255,255,.14);padding-top:12px;color:#a9c0b2;font-size:14px;line-height:1.45}
+  .steps div::before{counter-increment:s;content:counter(s);display:block;color:var(--gold);font-weight:700;font-size:22px;margin-bottom:2px}
+  .steps b{color:#fff}
+  footer{padding:16px 24px 22px;color:#7f9b8a;font-size:13px;text-align:center;position:relative}
+  @media (max-width:860px){
+    .roles,.steps{grid-template-columns:1fr 1fr}
+    .role{min-height:170px}
+  }
+  @media (max-width:480px){
+    .wrap{padding:28px 16px 16px}
+    .roles{grid-template-columns:1fr}
+    .role{min-height:0;display:grid;grid-template-columns:52px minmax(0,1fr);gap:4px 14px;align-items:center}
+    .role .ic{grid-row:span 2}
+    .role b{padding-top:0;margin-top:0}
+    .role .k{display:none}
+    .steps{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="seal" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <div><small>โรงเรียนเทพศิรินทร์พุแค สระบุรี</small><h1 id="eName">ระบบเลือกตั้งบนเครื่อง</h1></div>
+  </div>
+  <p class="lead">เครื่องนี้ใช้ทำหน้าที่อะไร?</p>
+  <div class="roles" id="roles"></div>
+  <label class="rem"><input type="checkbox" id="rem" checked> จำไว้ ครั้งต่อไปเปิดลิงก์นี้แล้วเข้าหน้านั้นเลย</label>
+  <div class="cur hide" id="cur"></div>
+  <a class="stu" href="candidates.html"><span class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.7.8 2.8 2.5 3 5.2"/></svg></span>
+    <span><b>ผู้สมัครและนโยบาย</b><span>สำหรับนักเรียน · เปิดบนมือถือได้</span></span><span class="ar">→</span></a>
+  <div class="warn hide" id="warn">ยังไม่ได้ตั้งค่าลิงก์หลังบ้าน — แก้บรรทัด EXEC_URL ในไฟล์ app.js</div>
+  <div class="steps">
+    <div><b>นักเรียนแสดงตัว</b> ที่โต๊ะกรรมการของจุดตามระดับชั้น</div>
+    <div><b>กรรมการพิมพ์เลขประจำตัว</b> ตรวจสิทธิ์ แล้วปลดล็อกคูหาที่ว่าง</div>
+    <div><b>นักเรียนลงคะแนน</b> บัตรประธานนักเรียน และบัตรประธานคณะสีของตน</div>
+    <div><b>ยืนยันแล้วคูหาล็อกเอง</b> พร้อมรับคนถัดไป</div>
+  </div>
+</div>
+<footer>ผู้พัฒนาระบบ: นายนิมิต ศรีวัฒนะ · โรงเรียนเทพศิรินทร์พุแค สระบุรี</footer>
+<script>
+var IC = {
+  'desk.html': '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/>',
+  'booth.html': '<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 12l2 2 4-4"/>',
+  'display.html': '<rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4M7 13v-3M11 13V8M15 13v-5"/>',
+  'admin.html': '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/>'
+};
+var USE = { 'desk.html': 'ต่อจุดละ 1 เครื่อง', 'booth.html': 'ต่อจุดละ 4 เครื่อง', 'display.html': 'ทีวี / โปรเจกเตอร์', 'admin.html': 'ครูผู้ดูแล' };
+document.getElementById('roles').innerHTML = EV.roles.map(function (r) {
+  return '<button type="button" class="role' + (r.file === 'admin.html' ? ' adm' : '') + '" data-f="' + r.file + '"><span class="k">' + USE[r.file] + '</span>' +
+    '<span class="ic"><svg class="i" viewBox="0 0 24 24">' + IC[r.file] + '</svg></span><b>' + EV.esc(r.name) + '</b><span>' + EV.esc(r.hint) + '</span></button>';
+}).join('');
+document.getElementById('roles').onclick = function (e) {
+  var b = e.target.closest('[data-f]'); if (!b) return;
+  var f = b.getAttribute('data-f');
+  // ผู้ดูแลระบบไม่จำ (กันเครื่องสาธารณะเปิดหน้าผู้ดูแลค้าง)
+  if (document.getElementById('rem').checked && f !== 'admin.html') EV.store.set('ev_role', f); else if (f !== 'admin.html') EV.store.del('ev_role');
+  location.href = f;
+};
+(function () {
+  var r = EV.store.get('ev_role'), cur = document.getElementById('cur');
+  var role = EV.roles.filter(function (x) { return x.file === r; })[0];
+  if (role) { cur.classList.remove('hide'); cur.innerHTML = 'เครื่องนี้จำไว้เป็น <b>' + EV.esc(role.name) + '</b> · <button type="button" id="forget">ไม่ต้องจำ</button>'; document.getElementById('forget').onclick = function () { EV.store.del('ev_role'); cur.classList.add('hide'); }; }
+  if (!EV.ready) document.getElementById('warn').classList.remove('hide');
+  else EV.call('getPublicSummary', []).then(function (s) { if (s.electionName) document.getElementById('eName').textContent = s.electionName; }).catch(function () {});
+})();
+</script>
+</body>
+</html>

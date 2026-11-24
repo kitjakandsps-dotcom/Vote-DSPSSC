@@ -5,7 +5,7 @@
    app.js — ไฟล์กลางของหน้าบ้าน
    แก้บรรทัดเดียว: EXEC_URL = ลิงก์ /exec ของหลังบ้าน (Apps Script ชุดเลือกตั้งบนเครื่อง)
    ========================================================= */
-var EXEC_URL = 'https://script.google.com/macros/s/AKfycbyhe2W-Y_O4VOFYDdUxpVo0lb01SE_GPnJ24uRlQlOK32ploenjCj6UCympY8LIrd8mYA/exec';
+var EXEC_URL = 'https://script.google.com/macros/s/ใส่รหัสDEPLOYMENTที่นี่/exec';
 /* ไม่ต้องแก้ด้านล่างนี้ */
 (function () {
   var TIMEOUT_MS = 30000;

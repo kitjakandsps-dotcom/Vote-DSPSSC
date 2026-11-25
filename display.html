@@ -238,6 +238,9 @@
   .ihs .gp .ib{padding:.9em 1.2em 1em;display:flex;flex-direction:column;justify-content:center;gap:.45em;flex:1;margin:0}
   .ihs .gp .mb{font-size:1.05em;grid-template-columns:1.6em minmax(0,1fr) 3.6em}
   .inote{color:#a9c0b2;font-size:.9em;margin-top:.8em}
+  .ipend .ib{padding:1em 1.2em;display:flex;flex-direction:column;justify-content:center;gap:.25em;flex:1}
+  .ipend .ib b{font-size:1.15em}
+  .ipend .ib span{color:#a9c0b2;font-size:.85em}
   .iwait{flex:1;display:grid;place-items:center;text-align:center;padding:1em}
   .iwait b{display:block;font-size:2.5em;line-height:1.2;margin:.5em 0 .25em}
   .iwait span:last-child{color:#a9c0b2;font-size:1.2em}
@@ -625,10 +628,12 @@ function ibars(b) {
   }).join('') + (vn ? '<div class="bline"></div><div class="brow vn"><span class="bn">–</span><div class="bw"><div class="bt"><span>ไม่ประสงค์ลงคะแนน</span></div><div class="tr"><i data-w="' + (b.voteNo / max * 100).toFixed(1) + '"></i></div></div>' +
     '<div class="vt"><b class="num">' + fmt(b.voteNo) + '</b>' + (pc ? '<small class="num">' + p1(b.voteNoPct) + '%</small>' : '') + '</div></div>' : '');
 }
-function ihouse(b) {
+function ihouse(b, iv) {
+  if (b.pending) return '<div class="gp ipend" style="--pc:' + esc(b.color) + ';--pon:' + EV.onColor(b.color) + '"><div class="gh"><span>' + esc(b.name) + '</span></div>' +
+    '<div class="ib"><b>รอบัตรครบ ' + fmt(iv.min) + ' ใบ</b><span>ขึ้นจอเมื่อบัตรคณะสีนี้ครบตามขั้นต่ำ</span></div></div>';
   var vn = shown('voteNo'), top = Math.max.apply(null, b.parties.map(function (p) { return p.votes; }).concat([0]));
   var max = Math.max.apply(null, b.parties.map(function (p) { return p.votes; }).concat([vn ? b.voteNo : 0, 1]));
-  return '<div class="gp" style="--pc:' + esc(b.color) + ';--pon:' + EV.onColor(b.color) + '"><div class="gh"><span>' + esc(b.name) + '</span><small class="num">นับแล้ว ' + fmt(b.counted) + ' ใบ</small></div><div class="ib mini">' +
+  return '<div class="gp" style="--pc:' + esc(b.color) + ';--pon:' + EV.onColor(b.color) + '"><div class="gh"><span>' + esc(b.name) + '</span><small class="num">นับแล้ว ' + fmt(b.counted) + ' ใบ' + (b.at !== iv.at ? ' · ณ ' + esc(b.at) + ' น.' : '') + '</small></div><div class="ib mini">' +
     b.parties.slice().sort(function (a, c) { return c.votes - a.votes || a.no - c.no; }).map(function (p) {
       return '<div class="mb' + (top > 0 && p.votes === top ? ' on' : '') + '"><span class="num">' + p.no + '</span><span class="tr"><i data-w="' + (p.votes / max * 100).toFixed(1) + '"></i></span><b class="num">' + fmt(p.votes) + '</b></div>';
     }).join('') + (vn ? '<div class="mb"><span>–</span><span class="tr"><i data-w="' + (b.voteNo / max * 100).toFixed(1) + '" style="background:#7f9b8a"></i></span><b class="num">' + fmt(b.voteNo) + '</b></div>' : '') + '</div></div>';
@@ -636,13 +641,13 @@ function ihouse(b) {
 function buildInterim(d) {
   var iv = d.interim;
   if (!iv.ready) return stage('<div class="iwait"><div><span class="itag">คะแนนเบื้องต้น · ยังไม่เป็นทางการ</span><b>รอบแรกขึ้นจอได้เวลา ' + esc(iv.nextAt) + ' น.</b>' +
-    '<span>เมื่อมีผู้ลงคะแนนอย่างน้อย ' + fmt(iv.min) + ' คน · อัปเดตทุก ' + iv.every + ' นาที</span></div></div>');
+    '<span>เมื่อมีผู้ลงคะแนนอย่างน้อย ' + fmt(iv.min) + ' คน · อัปเดตทุก ' + iv.every + ' นาที' + (iv.mainOnly ? '<br>นับเฉพาะบัตรวันเลือกตั้งจริง หีบล่วงหน้าเปิดเมื่อปิดหีบ' : '') + '</span></div></div>');
   var r = iv.results, pres = r.president, hs = r.houses.filter(function (h) { return h.parties.length; });
   stage('<div class="ptitle itl"><span class="itag">ยังไม่เป็นทางการ</span><h2>คะแนนเบื้องต้น</h2>' +
     '<div class="facts"><span>ข้อมูล ณ<b class="num">' + esc(iv.at) + '</b> น.</span><span>นับแล้ว<b class="num">' + fmt(iv.n) + '</b> ใบ</span><span>รอบถัดไป<b class="num">' + esc(iv.nextAt) + '</b> น.</span></div></div>' +
-    '<div class="igrid' + (hs.length ? '' : ' solo') + '"><section class="bars"><h3 class="ih">' + esc(pres.title || d.presTitle || 'ประธานนักเรียน') + '<small>ใช้สิทธิ์ ' + fmt(pres.turnout) + ' คน</small></h3>' + ibars(pres) + '</section>' +
-    (hs.length ? '<div class="ihs' + (hs.length === 1 ? ' one' : '') + '">' + hs.map(ihouse).join('') + '</div>' : '') + '</div>' +
-    '<div class="inote">คะแนนบางส่วนระหว่างเปิดลงคะแนน อัปเดตทุก ' + iv.every + ' นาที · ผลอย่างเป็นทางการประกาศหลังปิดหีบ</div>', 'ipage');
+    '<div class="igrid' + (hs.length ? '' : ' solo') + '"><section class="bars"><h3 class="ih">' + esc(pres.title || d.presTitle || 'ประธานนักเรียน') + '<small>นับแล้ว ' + fmt(pres.counted) + ' ใบ</small></h3>' + ibars(pres) + '</section>' +
+    (hs.length ? '<div class="ihs' + (hs.length === 1 ? ' one' : '') + '">' + hs.map(function (h) { return ihouse(h, iv); }).join('') + '</div>' : '') + '</div>' +
+    '<div class="inote">คะแนนบางส่วนระหว่างเปิดลงคะแนน อัปเดตทุก ' + iv.every + ' นาที' + (iv.mainOnly ? ' · เฉพาะบัตรวันเลือกตั้งจริง ไม่รวมหีบล่วงหน้า' : '') + ' · ผลอย่างเป็นทางการประกาศหลังปิดหีบ</div>', 'ipage');
 }
 
 function rowb(name, t, e, pct, color) {

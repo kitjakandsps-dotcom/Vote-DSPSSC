@@ -490,6 +490,40 @@
     .dsave{flex-wrap:wrap}.dsave .dirty{width:100%}
   }
   .chk input{width:18px;height:18px;margin-top:1px;accent-color:var(--g);flex-shrink:0}
+  /* ---------- ลำดับประกาศผล ---------- */
+  .rvopt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px}
+  .rvopt.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rvopt label{position:relative;display:block;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px 11px 38px;cursor:pointer;background:#fcfcfa;line-height:1.35;transition:border-color .12s,background .12s}
+  .rvopt input{position:absolute;left:12px;top:12px;width:18px;height:18px;margin:0;accent-color:var(--g)}
+  .rvopt b{display:block;font-size:14.5px}
+  .rvopt small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+  .rvopt label.on{border-color:var(--g);background:#eef5f0}
+  #dRvBox.off .rvmore{opacity:.42;pointer-events:none}
+  .rvvol{display:flex !important;align-items:center;gap:12px;height:46px;margin:0 !important}
+  .rvvol input[type=range]{flex:1;min-width:0;accent-color:var(--g);height:46px;margin:0}
+  .rvvol output{min-width:46px;text-align:right;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  label.f.dis{opacity:.45}
+  .ann{margin-top:14px;border:1.5px solid var(--gold);background:var(--gold1);border-radius:14px;padding:12px 14px 13px}
+  .ann.done{border-color:var(--line);background:var(--soft)}
+  .ann h4{margin:0;font-size:14.5px;display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+  .ann h4 small{font-weight:600;color:var(--gold9);font-size:12.5px}
+  .ann.done h4 small{color:var(--muted)}
+  .annl{list-style:none;margin:10px 0 12px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+  .annl li{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;border-radius:999px;padding:3px 10px 3px 8px;background:#fff;border:1px solid var(--line);color:var(--muted);line-height:1.5}
+  .annl li i{width:9px;height:9px;border-radius:3px;background:var(--c,#9aa39b);flex-shrink:0}
+  .annl li.done{color:var(--ink)}
+  .annl li.done::after{content:"\2713";color:var(--g);font-weight:700}
+  .annl li.now{background:var(--g9);border-color:var(--g9);color:#fff}
+  .ann .row{gap:8px}
+  .ann .row .btn.yel,.ann .row .btn.pri{flex:1 1 220px}
+  .ann .row .btn{height:auto;min-height:44px;padding-top:9px;padding-bottom:9px;line-height:1.3;text-align:center}
+  .ann .row .btn.sm{min-height:36px;padding-top:6px;padding-bottom:6px}
+  .ann p{margin:9px 0 0;font-size:13px;line-height:1.5;color:#5c4700}
+  .ann.done p{color:var(--muted)}
+  .annpre{margin:12px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
+  .annpre b{color:var(--ink);font-weight:600}
+  .lvside .ann{margin-top:12px}
+  @media (max-width:800px){.rvopt,.rvopt.two{grid-template-columns:minmax(0,1fr)}}
   .lvctl .chk{margin:4px 0 12px;color:#dfe9e2}.lvctl .chk input{accent-color:var(--gold)}
   .lvboxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
   .lvbox{border:1px solid var(--line);border-radius:14px;padding:10px 12px 11px;background:#fcfcfa;position:relative;overflow:hidden}
@@ -610,6 +644,7 @@
           </div>
           <p class="lead" style="margin:10px 0 0" id="modeHint"></p>
           <label class="chk"><input type="checkbox" class="altChk"> ตอนประกาศผล ให้จอสลับหน้าผลทางการกับกระดานนับสด</label>
+          <div class="annCtl"></div>
           <span class="flab" style="margin-top:12px">ผลคณะสีบนจอ (ตอนประกาศผล)</span>
           <div class="seg" id="viewSeg">
             <button data-v="GRID">แบ่งจอทุกสี</button>
@@ -809,6 +844,7 @@
             <button data-m="FINAL">ประกาศผล</button>
           </div>
           <label class="chk"><input type="checkbox" class="altChk"> ตอนประกาศผล ให้จอสลับหน้าผลทางการกับกระดานนับสด</label>
+          <div class="annCtl"></div>
           <span class="flab" style="margin-top:16px">หีบ</span>
           <div class="lvboxes" id="lvBoxes"></div>
           <span class="flab" style="margin-top:16px">ข่าววิ่ง</span>
@@ -838,6 +874,32 @@
           <label class="f"><span>รอบใหม่ต้องมีบัตรเพิ่มอย่างน้อย (ใบ)</span><input type="number" id="dMin" min="5" max="500" inputmode="numeric"></label>
         </div>
         <div class="dstat" id="dIntStat"></div>
+      </div>
+      <div class="box" id="dRvBox">
+        <h3><svg class="i" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 01-12 0z"/><path d="M6 6H3.5v1.5A3.5 3.5 0 007 11M18 6h2.5v1.5A3.5 3.5 0 0117 11"/></svg>ลำดับประกาศผล</h3>
+        <p class="lead" style="margin-bottom:14px">เมื่อกด “ประกาศผล” จอจะเปิดผลทีละตำแหน่ง ประธานคณะสีก่อน ปิดท้ายด้วยประธานนักเรียน · คะแนนเริ่มที่ 0 แล้ววิ่งขึ้นจนครบ จึงเผยผู้ได้รับเลือกตั้ง · ทุกจอเล่นพร้อมกันตามเวลาของระบบ</p>
+        <span class="flab">รูปแบบ</span>
+        <div class="rvopt" id="dRvStyle">
+          <label data-v="SMOOTH"><input type="radio" name="rvs" value="SMOOTH"><b>คะแนนวิ่งพร้อมกัน</b><small>ทุกคนวิ่งขึ้นพร้อมกันตามสัดส่วน จนถึงคะแนนจริง</small></label>
+          <label data-v="RACE"><input type="radio" name="rvs" value="RACE"><b>จำลองนับทีละใบ</b><small>ขานทีละใบแบบสุ่ม ผู้นำสลับกันได้ มีป้าย “นำ”</small></label>
+          <label data-v="OFF"><input type="radio" name="rvs" value="OFF"><b>ไม่ใช้</b><small>ขึ้นผลทั้งหมดทันทีแบบเดิม</small></label>
+        </div>
+        <div class="rvmore">
+          <span class="flab">จังหวะ</span>
+          <div class="rvopt two" id="dRvPace">
+            <label data-v="AUTO"><input type="radio" name="rvp" value="AUTO"><b>อัตโนมัติ</b><small>เล่นต่อกันจนครบ แล้วจอวนหน้าผลตามปกติ</small></label>
+            <label data-v="MANUAL"><input type="radio" name="rvp" value="MANUAL"><b>กดทีละตำแหน่ง</b><small>จอรอจนผู้ดูแลกดเปิดตำแหน่งถัดไปในหน้าภาพรวม เหมาะกับมีพิธีกร</small></label>
+          </div>
+          <div class="grid2">
+            <label class="f"><span>เวลานับคะแนนต่อตำแหน่ง</span><select class="f2" id="dRvSec"><option value="5">5 วินาที</option><option value="8">8 วินาที</option><option value="10">10 วินาที</option><option value="12">12 วินาที</option><option value="15">15 วินาที</option><option value="20">20 วินาที</option><option value="30">30 วินาที</option><option value="45">45 วินาที</option><option value="60">60 วินาที</option></select></label>
+            <label class="f" id="dRvHoldF"><span>ค้างผลหลังเผยผู้ชนะ</span><select class="f2" id="dRvHold"><option value="3">3 วินาที</option><option value="5">5 วินาที</option><option value="8">8 วินาที</option><option value="10">10 วินาที</option><option value="15">15 วินาที</option><option value="20">20 วินาที</option><option value="30">30 วินาที</option><option value="60">60 วินาที</option></select></label>
+            <label class="f"><span>เสียง</span><select class="f2" id="dRvAud"><option value="ROLL">กลองรัวระหว่างนับ + เสียงตอนเผย</option><option value="TICK">เสียงติ๊กตามคะแนน + เสียงตอนเผย</option><option value="WIN">เฉพาะตอนเผยผู้ชนะ</option><option value="OFF">ไม่มีเสียง</option></select></label>
+            <label class="f" id="dRvVolF"><span>ความดัง</span><span class="rvvol"><input type="range" id="dRvVol" min="0" max="100" step="5" aria-label="ความดังเสียง"><output id="dRvVolV">70%</output></span></label>
+          </div>
+          <label class="chk" style="margin-top:0"><input type="checkbox" id="dRvConf"> กระดาษโปรยสีเขียว-เหลืองตอนเผยผู้ชนะ</label>
+          <div class="dstat" id="dRvStat" style="margin-top:14px"></div>
+          <p class="dnote">เสียง: จอแต่ละเครื่องต้องแตะปุ่ม “เปิดเสียงที่จอนี้” ครั้งเดียว (ปุ่มขึ้นหลังปิดหีบ) · ใช้เสียงของโรงเรียนเองได้ โดยวางไฟล์ sound-roll.mp3, sound-win.mp3, sound-tie.mp3 ไว้ข้าง display.html · ที่จอกด Enter หรือแตะขอบขวาเพื่อข้ามไปดูผลได้ (เฉพาะจอเครื่องนั้น)</p>
+        </div>
       </div>
       <div class="box">
         <h3><svg class="i" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg>สิ่งที่แสดงบนจอ</h3>
@@ -1050,7 +1112,7 @@ function logoutLocal(msg) {
 }
 $('btnOut').onclick = function () { api('logout', [A.token], function () {}, true); logoutLocal(''); };
 function enter() { $('login').classList.add('hide'); $('app').classList.remove('hide'); load(); }
-function load(quiet) { api('getAdminData', [A.token], function (d) { A.data = d; renderAll(); }, quiet); }
+function load(quiet) { api('getAdminData', [A.token], function (d) { A.data = d; if (d.summary && d.summary.serverNow) A.skew = d.summary.serverNow - Date.now(); renderAll(); }, quiet); }
 setInterval(function () { if (A.token && document.visibilityState === 'visible' && $('veil').classList.contains('hide')) load(true); }, 5000);
 
 /* ---------- เมนู ---------- */
@@ -1130,6 +1192,7 @@ function renderAll() {
   $('tStatus').textContent = stName(st); $('tStatus').className = 'stat ' + st.status;
   $('tMode').textContent = 'จอ: ' + MODE_NAME[st.displayMode] + (st.displayMode === 'FINAL' && st.liveAlt ? ' + นับสด' : '');
   renderControl(d);
+  renderAnn();
   if (!A.stDirty) renderStations(d);
   renderTeacherBox(d);
   renderBooths(d);
@@ -1209,7 +1272,7 @@ function renderControl(d) {
 
   syncModeSegs(st);
   [].forEach.call($('viewSeg').children, function (x) { x.classList.toggle('on', x.getAttribute('data-v') === st.groupView); });
-  $('modeHint').textContent = st.status === 'CLOSED' ? 'ปิดหีบแล้ว เลือก “นับคะแนนสด” เพื่อทยอยเปิดผลทีละชุด หรือ “ประกาศผล” เพื่อขึ้นผลทั้งหมดทันที' : st.status === 'SEALED' ? 'พักหีบ: จอแสดงยอดผู้ใช้สิทธิ์ล่วงหน้าและวันเลือกตั้งจริง · ประกาศผลได้หลังปิดหีบ' : 'ระหว่างเปิดลงคะแนน จอแสดงเฉพาะยอดผู้มาใช้สิทธิ์ · ประกาศผลได้หลังปิด';
+  $('modeHint').textContent = st.status === 'CLOSED' ? 'ปิดหีบแล้ว เลือก “นับคะแนนสด” เพื่อทยอยเปิดผลทีละชุด หรือ “ประกาศผล” เพื่อ' + (rvMerge((st.displayCfg || {}).reveal).style === 'OFF' ? 'ขึ้นผลทั้งหมดทันที' : 'เริ่มลำดับประกาศผลทีละตำแหน่ง') : st.status === 'SEALED' ? 'พักหีบ: จอแสดงยอดผู้ใช้สิทธิ์ล่วงหน้าและวันเลือกตั้งจริง · ประกาศผลได้หลังปิดหีบ' : 'ระหว่างเปิดลงคะแนน จอแสดงเฉพาะยอดผู้มาใช้สิทธิ์ · ประกาศผลได้หลังปิด';
 
   // จุดและคูหา (สด)
   $('stLive').innerHTML = s.byStation.map(function (x) {
@@ -1317,7 +1380,8 @@ function pickMode(m) {
       toast('จอ: ' + MODE_NAME[m]); load(true); if (!$('p-liv').classList.contains('hide')) loadLive(true);
     });
   };
-  if (m === 'FINAL') return dialog({ title: 'ประกาศผลอย่างเป็นทางการ?', text: 'จอแสดงผลจะขึ้นผู้ได้รับเลือกตั้งของทุกบัตรทันที' + (liveUnfinished() ? '\nการนับคะแนนสดยังไม่ครบ ชุดที่เหลือจะเปิดทั้งหมด' : ''), yes: 'ประกาศผล', onYes: go });
+  if (m === 'FINAL') { var ties = rvTies(); return dialog({ title: 'ประกาศผลอย่างเป็นทางการ?', danger: ties.length > 0, text: rvFinalText() + (liveUnfinished() ? '\nการนับคะแนนสดยังไม่ครบ ชุดที่เหลือจะเปิดทั้งหมด' : '') +
+    (ties.length ? '\n\nยังมีคะแนนเสมอที่ยังไม่ได้ตัดสิน: ' + ties.join(', ') + '\nจอจะขึ้นว่า “คะแนนเสมอ · รอคณะกรรมการตัดสิน” · บันทึกผลตัดสินได้ที่กล่องผลการเลือกตั้งในภาพรวม (บันทึกระหว่างประกาศ จอจะอัปเดตเอง)' : ''), yes: ties.length ? 'ประกาศผลทั้งที่ยังเสมอ' : 'ประกาศผล', onYes: go }); }
   if (m === 'LIVE' && !st.live) return dialog({ title: 'ขึ้นจอกระดานนับสด?', text: 'ยังไม่ได้เริ่มนับ จอจะแสดง “กำลังเตรียมนับคะแนน” จนกว่าจะกดเริ่มนับในเมนูนับคะแนนสด', yes: 'ขึ้นจอ', onYes: go });
   go();
 }
@@ -1335,13 +1399,15 @@ $('lvModeSeg').onclick = function (e) { pickMode(e.target.getAttribute('data-m')
 
 /* ================= ตั้งค่าจอแสดงผล ================= */
 var DSP_DEF = { open: ['TURNOUT'], closed: ['TURNOUT', 'STATS'], final: ['PRES', 'HOUSES'],
-  sec: { TURNOUT: 20, STATS: 15, INTERIM: 20, PRES: 16, GRID: 20, HOUSE: 12, LIVE: 18 },
+  sec: { TURNOUT: 20, CANDS: 15, STATS: 15, INTERIM: 20, PRES: 16, GRID: 20, HOUSE: 12, LIVE: 18 },
   show: { station: true, house: true, level: true, chips: true, clock: true, photo: true, pct: true, voteNo: true },
-  interim: { every: 30, min: 20 } };
-var DSP_ORDER = { open: ['TURNOUT', 'STATS', 'INTERIM'], closed: ['TURNOUT', 'STATS'], final: ['PRES', 'HOUSES', 'TURNOUT', 'STATS'] };
+  interim: { every: 30, min: 20 },
+  reveal: { style: 'SMOOTH', pace: 'AUTO', sec: 12, hold: 8, confetti: true, audio: 'ROLL', volume: 70 } };
+var DSP_ORDER = { open: ['TURNOUT', 'CANDS', 'STATS', 'INTERIM'], closed: ['TURNOUT', 'STATS'], final: ['PRES', 'HOUSES', 'TURNOUT', 'STATS'] };
 var DSP_PH = [['open', 'ระหว่างเปิดลงคะแนน'], ['closed', 'ปิดหีบ รอประกาศผล'], ['final', 'ประกาศผล']];
 var DSP_ROWS = [
   { k: 'TURNOUT', n: 'ยอดผู้มาใช้สิทธิ์', h: 'จำนวน ร้อยละ แยกจุด คณะสี ระดับชั้น', ph: ['open', 'closed', 'final'] },
+  { k: 'CANDS', n: 'แนะนำผู้สมัคร', h: 'รูป หมายเลข ชื่อ ทุกบัตร · ไม่มีคะแนน', ph: ['open'] },
   { k: 'STATS', n: 'สถิติผู้มาใช้สิทธิ์', h: 'รายชั่วโมง และห้องที่มามากที่สุด', ph: ['open', 'closed', 'final'] },
   { k: 'INTERIM', n: 'คะแนนเบื้องต้น', h: 'อัปเดตเป็นรอบ · ตั้งค่าในกล่องด้านล่าง', ph: ['open'] },
   { k: 'PRES', n: 'ผลประธานนักเรียน', h: '', ph: ['final'] },
@@ -1352,11 +1418,12 @@ var D = { cfg: null, view: 'GRID', alt: false, dirty: false };
 function dspFromServer() {
   var st = A.data.settings;
   D.cfg = JSON.parse(JSON.stringify(st.displayCfg || DSP_DEF));
+  D.cfg.reveal = rvMerge(D.cfg.reveal);
   D.view = st.groupView === 'CYCLE' ? 'CYCLE' : 'GRID'; D.alt = !!st.liveAlt; D.dirty = false;
 }
 function dspSecKey(k) { return k === 'HOUSES' ? (D.view === 'CYCLE' ? 'HOUSE' : 'GRID') : k; }
 function dspOn(k, ph) { return k === 'LIVE' ? D.alt : D.cfg[ph].indexOf(k) > -1; }
-function dspDirty() { D.dirty = true; $('dDirty').textContent = 'ยังไม่ได้บันทึก'; $('dIntBox').classList.toggle('dis', D.cfg.open.indexOf('INTERIM') < 0); renderIntStat(); }
+function dspDirty() { D.dirty = true; $('dDirty').textContent = 'ยังไม่ได้บันทึก'; $('dIntBox').classList.toggle('dis', D.cfg.open.indexOf('INTERIM') < 0); renderIntStat(); rvPaneState(); }
 function renderDisplayPane() {
   if (!A.data) return;
   if (!D.cfg || !D.dirty) dspFromServer();
@@ -1368,6 +1435,7 @@ function renderDisplayPane() {
   [].forEach.call(document.querySelectorAll('#dShow input[data-s]'), function (i) { i.checked = c.show[i.getAttribute('data-s')] !== false; });
   $('dDirty').textContent = '';
   renderIntStat();
+  rvPaneSet();
 }
 function drawDspTable() {
   var c = D.cfg;
@@ -1427,7 +1495,7 @@ $('btnDReset').onclick = function () {
   D.cfg = JSON.parse(JSON.stringify(DSP_DEF)); D.view = 'GRID'; D.alt = false;
   drawDspTable(); $('dEvery').value = '30'; $('dMin').value = 20;
   [].forEach.call(document.querySelectorAll('#dShow input[data-s]'), function (i) { i.checked = true; });
-  dspDirty(); toast('คืนค่าเริ่มต้นแล้ว กดบันทึกเพื่อใช้งาน');
+  rvPaneSet(); dspDirty(); toast('คืนค่าเริ่มต้นแล้ว กดบันทึกเพื่อใช้งาน');
 };
 $('btnDSave').onclick = function () {
   var c = D.cfg, st = A.data.settings;
@@ -1442,13 +1510,157 @@ $('btnDSave').onclick = function () {
     var steps = [];
     if (D.view !== st.groupView) steps.push(['setGroupView', [A.token, D.view]]);
     if (D.alt !== !!st.liveAlt) steps.push(['setDisplayMode', [A.token, st.displayMode, D.alt]]);
+    var an = A.data.summary.announce, rvc = c.reveal || {}, timeline = rvActive() && rvc.style !== 'OFF' &&
+      (an.style !== rvc.style || an.pace !== rvc.pace || an.sec !== rvc.sec || an.hold !== rvc.hold || D.view !== st.groupView);
     (function next() {
       var x = steps.shift();
-      if (!x) { D.dirty = false; D.cfg = null; toast('บันทึกการตั้งค่าจอแล้ว'); load(true); return; }
+      if (!x) { D.dirty = false; D.cfg = null; toast(timeline ? 'บันทึกแล้ว · ลำดับที่กำลังประกาศใช้ค่าเดิม ค่าใหม่มีผลเมื่อกด “เล่นการประกาศอีกครั้ง”' : 'บันทึกการตั้งค่าจอแล้ว'); load(true); return; }
       api(x[0], x[1], function (y) { if (!y.ok) toast(y.message, true); next(); });
     })();
   });
 };
+/* ================= ลำดับประกาศผล ================= */
+var RV_PRE = 1500, RV_SUSP = 1800;                 // ต้องตรงกับจอแสดงผลและ Code.gs
+var RV_STYLE = { SMOOTH: 'คะแนนวิ่งพร้อมกัน', RACE: 'จำลองนับทีละใบ', OFF: 'ไม่ใช้' };
+function rvMerge(r) { var o = {}, k; for (k in DSP_DEF.reveal) o[k] = DSP_DEF.reveal[k]; if (r) for (k in r) o[k] = r[k]; return o; }
+/** ลำดับตำแหน่งที่จอจะเปิด (ตรงกับ revealRaces_ ฝั่งเซิร์ฟเวอร์) · ยังไม่ปิดหีบใช้รายชื่อผู้สมัครแทนผลคะแนน */
+function rvRaces(final, view) {
+  var d = A.data, res = d.summary.results, out = [], hs;
+  if (res) hs = res.houses.filter(function (h) { return h.parties.length; }).map(function (h) { return h.gid; });
+  else hs = (d.houses || []).filter(function (h) { return (d.candidates || []).some(function (c) { return c.active && c.ballot === h.gid; }); }).map(function (h) { return h.gid; });
+  var pres = res ? res.president.parties.length : (d.candidates || []).some(function (c) { return c.active && c.ballot === 'PRES'; });
+  if (final.indexOf('HOUSES') > -1 && hs.length) { if (view === 'CYCLE') hs.forEach(function (g) { out.push('H:' + g); }); else out.push('GRID'); }
+  if (final.indexOf('PRES') > -1 && pres) out.push('PRES');
+  return out;
+}
+function rvHouse(k) { var g = k.slice(2); return (A.data.houses || []).filter(function (h) { return h.gid === g; })[0] || null; }
+function rvName(k) {
+  if (k === 'PRES') { var r = A.data.summary.results; return (r && r.president.title) || 'ประธานนักเรียน'; }
+  if (k === 'GRID') return 'ประธานคณะสี (ทุกสี)';
+  var h = rvHouse(k); return h ? h.name : 'คณะสี';
+}
+function rvColor(k) { var h = k.indexOf('H:') === 0 ? rvHouse(k) : null; return h ? h.color : k === 'PRES' ? '#f2b705' : '#1d5a36'; }
+function rvPerRace(r, liveSeen) { return RV_PRE + (liveSeen ? 0 : r.sec * 1000) + RV_SUSP; }
+function rvDurText(ms) { var t = Math.round(ms / 1000), m = Math.floor(t / 60), x = t % 60; return m ? m + ' นาที' + (x ? ' ' + x + ' วินาที' : '') : t + ' วินาที'; }
+function rvClock(ms) { var d = new Date(ms - (A.skew || 0)); return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); }
+/** ข้อความในกล่องยืนยันตอนกดประกาศผล */
+function rvFinalText() {
+  var st = A.data.settings, c = st.displayCfg || DSP_DEF, r = rvMerge(c.reveal), races = rvRaces(c.final, st.groupView);
+  if (r.style === 'OFF' || !races.length) return 'จอแสดงผลจะขึ้นผู้ได้รับเลือกตั้งของทุกบัตรทันที';
+  return 'จอจะเริ่มลำดับประกาศผล (' + RV_STYLE[r.style] + '): ' + races.map(rvName).join(' → ') + '\n' +
+    (r.pace === 'MANUAL' ? 'จอจะรอจนกด “เริ่มประกาศ” ในหน้าภาพรวม แล้วกดเปิดทีละตำแหน่ง' : 'เล่นต่อกันเองราว ' + rvDurText(races.length * (rvPerRace(r) + r.hold * 1000)) + ' แล้ววนหน้าผลตามปกติ');
+}
+/** ตำแหน่งที่คะแนนเสมอและยังไม่ได้บันทึกผลตัดสิน */
+function rvTies() {
+  var r = A.data.summary.results; if (!r) return [];
+  return [r.president].concat(r.houses).filter(function (b) { return b.result && b.result.state === 'TIE'; })
+    .map(function (b) { return b === r.president ? (b.title || 'ประธานนักเรียน') : (b.title || 'ประธาน' + b.name); });
+}
+/** กำลังเล่นลำดับประกาศอยู่ (ยังไม่จบ) */
+function rvActive() { var an = A.data && A.data.summary.announce; return !!(an && an.races.length && annState(an).k !== 'DONE'); }
+/* ---- ตั้งค่าในเมนูจอแสดงผล ---- */
+function rvPick(id, v) { [].forEach.call($(id).querySelectorAll('label[data-v]'), function (l) { var on = l.getAttribute('data-v') === v; l.classList.toggle('on', on); l.querySelector('input').checked = on; }); }
+function rvSel(id, v) { var e = $(id); if (![].some.call(e.options, function (o) { return +o.value === +v; })) e.add(new Option(v + ' วินาที', String(v))); e.value = String(v); }
+function rvPaneSet() {
+  if (!D.cfg) return;
+  var r = D.cfg.reveal = rvMerge(D.cfg.reveal);
+  rvSel('dRvSec', r.sec); rvSel('dRvHold', r.hold);
+  $('dRvAud').value = r.audio; $('dRvVol').value = r.volume; $('dRvConf').checked = !!r.confetti;
+  rvPaneState();
+}
+function rvPaneState() {
+  if (!D.cfg || !A.data) return;
+  var r = D.cfg.reveal, man = r.pace === 'MANUAL', mute = r.audio === 'OFF';
+  rvPick('dRvStyle', r.style); rvPick('dRvPace', r.pace);
+  $('dRvBox').classList.toggle('off', r.style === 'OFF');
+  $('dRvHoldF').classList.toggle('dis', man); $('dRvHold').disabled = man;
+  $('dRvVolF').classList.toggle('dis', mute); $('dRvVol').disabled = mute;
+  $('dRvVolV').textContent = r.volume + '%';
+  var races = rvRaces(D.cfg.final, D.view), html;
+  if (r.style === 'OFF') html = 'กดประกาศผลแล้วจอขึ้นผลทั้งหมดทันที';
+  else if (!races.length) html = 'ยังไม่มีตำแหน่งที่จะประกาศ · ต้องมีผู้สมัคร และติ๊กหน้าผลประธานนักเรียนหรือผลคณะสีในช่วงประกาศผล';
+  else html = 'ลำดับบนจอ: <b>' + races.map(function (k) { return esc(rvName(k)); }).join(' → ') + '</b><br>' +
+    (man ? 'นับตำแหน่งละราว ' + rvDurText(rvPerRace(r)) + ' แล้วค้างผลไว้จนกว่าจะกดตำแหน่งถัดไป'
+         : 'ใช้เวลาทั้งหมดราว <b>' + rvDurText(races.length * (rvPerRace(r) + r.hold * 1000)) + '</b> แล้ววนหน้าผลตามปกติ') +
+    (D.cfg.final.indexOf('HOUSES') > -1 && races.length > 1 ? ' · ผลคณะสี' + (D.view === 'CYCLE' ? 'เปิดทีละสี' : 'เปิดพร้อมกันทุกสี') + ' (เปลี่ยนได้ที่ “แบ่งจอทุกสี / วนทีละสี”)' : '');
+  if (rvActive() && r.style !== 'OFF') html += '<br><b>กำลังประกาศอยู่</b> · ลำดับที่กำลังเล่นใช้ค่าเดิม ค่าใหม่ (รูปแบบ จังหวะ เวลา) มีผลเมื่อกด “เล่นการประกาศอีกครั้ง” · เสียงและกระดาษโปรยมีผลทันที · เลือก “ไม่ใช้” = หยุดลำดับทันที';
+  $('dRvStat').innerHTML = html;
+}
+$('dRvStyle').onchange = function (e) { if (e.target.name !== 'rvs' || !D.cfg) return; D.cfg.reveal.style = e.target.value; dspDirty(); };
+$('dRvPace').onchange = function (e) { if (e.target.name !== 'rvp' || !D.cfg) return; D.cfg.reveal.pace = e.target.value; dspDirty(); };
+$('dRvSec').onchange = function () { D.cfg.reveal.sec = +$('dRvSec').value; dspDirty(); };
+$('dRvHold').onchange = function () { D.cfg.reveal.hold = +$('dRvHold').value; dspDirty(); };
+$('dRvAud').onchange = function () { D.cfg.reveal.audio = $('dRvAud').value; dspDirty(); };
+$('dRvVol').oninput = function () { D.cfg.reveal.volume = +$('dRvVol').value; dspDirty(); };
+$('dRvConf').onchange = function () { D.cfg.reveal.confetti = $('dRvConf').checked; dspDirty(); };
+/* ---- แผงคุมตอนประกาศ (ภาพรวม และหน้านับคะแนนสด) ---- */
+function annState(an) {
+  var now = Date.now() + (A.skew || 0), N = an.races.length, show = rvPerRace(an, an.liveSeen);
+  if (an.pace === 'MANUAL') {
+    var n = an.steps.length;
+    if (!n) return { k: 'WAIT', i: -1, N: N };
+    if (n > N) return { k: 'DONE', i: N, N: N };
+    var t = now - an.steps[n - 1];
+    return { k: t < show ? 'COUNT' : 'SHOW', i: n - 1, N: N, left: Math.max(1, Math.ceil((show - t) / 1000)) };
+  }
+  var dur = show + an.hold * 1000, el = Math.max(0, now - an.at), i = Math.floor(el / dur);
+  if (i >= N) return { k: 'DONE', i: N, N: N };
+  var t2 = el - i * dur;
+  return { k: t2 < show ? 'COUNT' : 'SHOW', i: i, N: N, left: Math.max(1, Math.ceil((show - t2) / 1000)), end: an.at + N * dur };
+}
+function annHtml() {
+  var d = A.data, st = d.settings, an = d.summary.announce;
+  if (st.status !== 'CLOSED') return '';
+  if (st.displayMode !== 'FINAL') {
+    var c = st.displayCfg || DSP_DEF, r = rvMerge(c.reveal), races = rvRaces(c.final, st.groupView);
+    if (r.style === 'OFF' || !races.length) return '';
+    return '<p class="annpre">ลำดับประกาศผล: <b>' + RV_STYLE[r.style] + ' · ' + (r.pace === 'MANUAL' ? 'กดทีละตำแหน่ง' : 'อัตโนมัติ') + '</b> · ' +
+      races.map(function (k) { return esc(rvName(k)); }).join(' → ') + ' <button type="button" class="dlink" data-go="dsp" style="display:inline;margin:0">ตั้งค่า ›</button></p>';
+  }
+  if (!an || !an.races.length) {
+    var cur = rvMerge((st.displayCfg || {}).reveal), old = st.announce && st.announce.cfg;
+    if (cur.style !== 'OFF' && old && old.style === 'OFF') return '<div class="ann done"><h4>ลำดับประกาศผล<small>ประกาศแบบขึ้นผลทันทีไปแล้ว</small></h4>' +
+      '<p style="margin:6px 0 10px">ถ้าต้องการให้จอเล่นลำดับประกาศผลตามที่ตั้งไว้ใหม่ กดปุ่มนี้</p><div class="row"><button type="button" class="btn yel" data-an="REPLAY">เล่นการประกาศ</button></div></div>';
+    return '';
+  }
+  var s = annState(an), man = an.pace === 'MANUAL', btn = '', msg;
+  var chips = an.races.map(function (k, j) {
+    var cls = s.k === 'DONE' || j < s.i || (j === s.i && s.k === 'SHOW') ? 'done' : j === s.i ? 'now' : '';
+    return '<li class="' + cls + '" style="--c:' + esc(rvColor(k)) + '"><i></i>' + esc(rvName(k)) + '</li>';
+  }).join('');
+  var cur = s.i >= 0 && s.i < s.N ? rvName(an.races[s.i]) : '';
+  if (s.k === 'DONE') msg = 'ประกาศครบทุกตำแหน่งแล้ว · จอวนหน้าผลตามปกติ';
+  else if (man) {
+    if (s.k === 'WAIT') { msg = 'จอขึ้นรายการตำแหน่งรอไว้ · กดเริ่มเมื่อพร้อม'; btn = '<button type="button" class="btn yel" data-an="NEXT">เริ่มประกาศ: ' + esc(rvName(an.races[0])) + ' (1/' + s.N + ')</button>'; }
+    else if (s.k === 'COUNT') {
+      msg = 'กำลังนับ ' + esc(cur) + ' · เผยผู้ได้รับเลือกตั้งในอีก <b>' + s.left + '</b> วินาที';
+      btn = s.i < s.N - 1 ? '<button type="button" class="btn yel" data-an="NEXT" disabled>เปิดตำแหน่งถัดไป: ' + esc(rvName(an.races[s.i + 1])) + ' (' + (s.i + 2) + '/' + s.N + ')</button>' : '<button type="button" class="btn pri" data-an="NEXT" disabled>จบการประกาศ</button>';
+    } else if (s.i < s.N - 1) { msg = 'เผยผล ' + esc(cur) + ' แล้ว · จอค้างผลรอตำแหน่งถัดไป'; btn = '<button type="button" class="btn yel" data-an="NEXT">เปิดตำแหน่งถัดไป: ' + esc(rvName(an.races[s.i + 1])) + ' (' + (s.i + 2) + '/' + s.N + ')</button>'; }
+    else { msg = 'ครบทุกตำแหน่งแล้ว · กด “จบการประกาศ” ให้จอกลับไปวนหน้าผลตามปกติ'; btn = '<button type="button" class="btn pri" data-an="NEXT">จบการประกาศ</button>'; }
+  } else msg = (s.k === 'COUNT' ? 'กำลังนับ ' : 'เผยผล ') + esc(cur) + ' (' + (s.i + 1) + '/' + s.N + ') · จบราว <b>' + rvClock(s.end) + '</b> น.';
+  return '<div class="ann' + (s.k === 'DONE' ? ' done' : '') + '"><h4>ลำดับประกาศผล<small>' + RV_STYLE[an.style] + ' · ' + (man ? 'กดทีละตำแหน่ง' : 'อัตโนมัติ') + '</small></h4>' +
+    '<ol class="annl">' + chips + '</ol><div class="row">' + btn + '<button type="button" class="btn ghost sm" data-an="REPLAY">เล่นการประกาศอีกครั้ง</button></div><p>' + msg + '</p></div>';
+}
+function renderAnn() {
+  if (!A.data) return;
+  var html = annHtml();
+  [].forEach.call(document.querySelectorAll('.annCtl'), function (e) { if (e._h !== html) { e._h = html; e.innerHTML = html; } });
+}
+setInterval(function () { if (A.data && A.data.summary.announce && document.visibilityState === 'visible') renderAnn(); }, 1000);
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-an]'); if (!b || b.disabled) return;
+  var a = b.getAttribute('data-an'), an = A.data.summary.announce;
+  if (a === 'NEXT') {
+    b.disabled = true;
+    return api('revealNext', [A.token], function (r) {
+      if (!r.ok) { b.disabled = false; return toast(r.message, true); }
+      toast(r.step > r.total ? 'จบการประกาศ · จอกลับไปวนหน้าผลตามปกติ' : 'จอเปิดตำแหน่งที่ ' + r.step + '/' + r.total);
+      load(true);
+    });
+  }
+  if (a === 'REPLAY') dialog({ title: 'เล่นการประกาศอีกครั้ง?', text: 'ทุกจอจะเริ่มลำดับประกาศผลใหม่ตั้งแต่ตำแหน่งแรก' + (an && an.pace === 'MANUAL' ? ' และรอให้กด “เริ่มประกาศ” อีกครั้ง' : '') + '\nผลคะแนนไม่เปลี่ยน', yes: 'เล่นอีกครั้ง',
+    onYes: function () { api('revealReplay', [A.token], function (r) { if (!r.ok) return toast(r.message, true); toast('เริ่มลำดับประกาศผลใหม่'); load(true); }); } });
+});
 document.addEventListener('click', function (e) {
   var g = e.target.closest('[data-go]'); if (!g) return;
   var b = $('nav').querySelector('button[data-p="' + g.getAttribute('data-go') + '"]'); if (b) b.click();
@@ -1565,7 +1777,7 @@ $('lvInt').onchange = function () {
 $('lvSteps').onchange = function () { renderLive(); };
 $('viewSeg').onclick = function (e) {
   var v = e.target.getAttribute('data-v'); if (!v || v === A.data.settings.groupView) return;
-  api('setGroupView', [A.token, v], function (r) { if (r.ok) { toast(v === 'GRID' ? 'ผลคณะสี: แบ่งจอทุกสี' : 'ผลคณะสี: วนทีละสี'); load(true); } });
+  api('setGroupView', [A.token, v], function (r) { if (r.ok) { toast((v === 'GRID' ? 'ผลคณะสี: แบ่งจอทุกสี' : 'ผลคณะสี: วนทีละสี') + (rvActive() ? ' · ลำดับที่กำลังประกาศไม่เปลี่ยน มีผลหลังประกาศจบ' : '')); load(true); } });
 };
 
 /* ---------- ผลการเลือกตั้ง (หลังปิด) ---------- */
